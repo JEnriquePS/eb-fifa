@@ -65,8 +65,8 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
   // Date-view layout
   if (hideDate) {
     return (
-      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${dimmed ? "opacity-50" : ""}`}>
-        <TimeChip time={match.time} className="text-[11px] shrink-0" />
+      <div className={`py-2 grid grid-cols-[4.5rem_1fr] sm:grid-cols-[4.5rem_1fr_auto] items-center gap-x-3 ${dimmed ? "opacity-50" : ""}`}>
+        <TimeChip time={match.time} className="text-[11px] w-full justify-center" />
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 min-w-0">
           <div className="flex items-center justify-end gap-2 min-w-0">
             <span className="font-cond font-semibold text-sm truncate" title={TEAMS[match.h].name}>
