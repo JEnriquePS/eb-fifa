@@ -77,9 +77,9 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
       <div className={`py-2 flex items-center gap-3 ${dimmed ? "opacity-50" : ""}`}>
         <TimeChip time={match.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
         <div className="flex-1 min-w-0">{teamRow("sm")}</div>
-        <div className="text-right hidden sm:flex sm:flex-col sm:items-end shrink-0">
-          <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>
-          <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60">{match.city}</p>
+        <div className="text-right hidden sm:flex sm:flex-col sm:items-end w-[130px] shrink-0">
+          <p className="font-cond text-xs text-mist leading-tight truncate">{match.stadium}</p>
+          <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60 truncate">{match.city}</p>
         </div>
       </div>
     );
