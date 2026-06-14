@@ -14,7 +14,7 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
   return (
     <div
-      className="flex flex-col items-center gap-1 w-[6.5rem] shrink-0"
+      className="flex flex-col items-center gap-1"
       title={locked ? "Partido iniciado — pronóstico cerrado 🔒" : undefined}
       style={locked ? { cursor: "not-allowed" } : undefined}
     >
@@ -39,7 +39,6 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
 
 function MatchRow({ match, score, result, onScore, hideDate = false }) {
   const locked = isMatchLocked(match);
-  const hasResult = result != null && result[0] != null && result[1] != null;
 
   const set = (idx, v) => {
     if (locked) return;
@@ -52,26 +51,32 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
   const awayLabel = `Goles ${TEAMS[match.a].name}`;
   const dimmed = locked;
 
+  const teamRow = (size = "sm") => (
+    <div
+      style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 6.5rem minmax(0,1fr)", alignItems: "center", columnGap: "0.5rem" }}
+    >
+      <div className="flex items-center justify-end gap-1.5 min-w-0">
+        <span className={`font-cond font-semibold text-${size} flex-1 min-w-0 text-right truncate`} title={TEAMS[match.h].name}>
+          {TEAMS[match.h].name}
+        </span>
+        <Flag code={match.h} className="shrink-0 text-xl leading-none" />
+      </div>
+      <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
+      <div className="flex items-center gap-1.5 min-w-0">
+        <Flag code={match.a} className="shrink-0 text-xl leading-none" />
+        <span className={`font-cond font-semibold text-${size} flex-1 min-w-0 truncate`} title={TEAMS[match.a].name}>
+          {TEAMS[match.a].name}
+        </span>
+      </div>
+    </div>
+  );
+
   // Date-view layout
   if (hideDate) {
     return (
-      <div className={`py-2 grid grid-cols-[4.5rem_1fr] sm:grid-cols-[4.5rem_1fr_auto] items-center gap-x-3 ${dimmed ? "opacity-50" : ""}`}>
-        <TimeChip time={match.time} className="text-[11px] w-full justify-center" />
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 min-w-0">
-          <div className="flex items-center justify-end gap-2 min-w-0">
-            <span className="font-cond font-semibold text-sm truncate" title={TEAMS[match.h].name}>
-              {TEAMS[match.h].name}
-            </span>
-            <Flag code={match.h} />
-          </div>
-          <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
-          <div className="flex items-center gap-2 min-w-0">
-            <Flag code={match.a} />
-            <span className="font-cond font-semibold text-sm truncate" title={TEAMS[match.a].name}>
-              {TEAMS[match.a].name}
-            </span>
-          </div>
-        </div>
+      <div className={`py-2 flex items-center gap-3 ${dimmed ? "opacity-50" : ""}`}>
+        <TimeChip time={match.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
+        <div className="flex-1 min-w-0">{teamRow("sm")}</div>
         <div className="text-right hidden sm:flex sm:flex-col sm:items-end shrink-0">
           <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>
           <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60">{match.city}</p>
@@ -83,21 +88,7 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
   // Group-card layout
   return (
     <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${dimmed ? "opacity-50" : ""}`}>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
-        <div className="flex items-center justify-end gap-2 min-w-0">
-          <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.h].name}>
-            {TEAMS[match.h].name}
-          </span>
-          <Flag code={match.h} />
-        </div>
-        <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
-        <div className="flex items-center gap-2 min-w-0">
-          <Flag code={match.a} />
-          <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.a].name}>
-            {TEAMS[match.a].name}
-          </span>
-        </div>
-      </div>
+      {teamRow("base")}
       <div className="mt-1 flex items-center justify-center gap-2 text-[11px] text-mist">
         <span>{formatDate(match.date)}</span>
         <TimeChip time={match.time} className="text-[11px]" />
@@ -270,19 +261,10 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
         const groups = [...new Set(matches.map((m) => m.g))].sort();
         const multiGroup = groups.length > 1;
 
-        // Sort by group then time so dividers appear cleanly
+        // Sort by time first so matches render in chronological order
         const sorted = [...matches].sort(
           (a, b) => a.time.localeCompare(b.time) || a.g.localeCompare(b.g)
         );
-        // Build segments [{group, matches}] for group dividers
-        const segments = sorted.reduce((acc, m) => {
-          if (!acc.length || acc[acc.length - 1].group !== m.g) {
-            acc.push({ group: m.g, matches: [m] });
-          } else {
-            acc[acc.length - 1].matches.push(m);
-          }
-          return acc;
-        }, []);
 
         return (
           <section
@@ -307,23 +289,26 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
               <div className="chalk-rule flex-1" />
             </header>
 
-            {/* Group cards */}
-            <div className="space-y-2 mb-3">
-              {segments.map(({ group, matches: gm }) => (
-                <div key={group} className="rounded-xl border border-line overflow-hidden">
-                  {multiGroup && (
-                    <div className="flex items-center gap-2 px-4 py-1.5 bg-turf/60 border-b border-line/60">
-                      <span className="font-cond text-[10px] uppercase tracking-widest text-mist/70">Grupo</span>
-                      <span className="font-display text-sm text-grass">{group}</span>
+            {/* All matches in one shared container so rows share the same width */}
+            <div className="rounded-xl border border-line overflow-hidden mb-3">
+              {sorted.map((m, idx) => {
+                const prevGroup = idx > 0 ? sorted[idx - 1].g : null;
+                const showHeader = multiGroup && m.g !== prevGroup;
+                const isLast = idx === sorted.length - 1;
+                return (
+                  <Fragment key={m.m}>
+                    {showHeader && (
+                      <div className={`flex items-center gap-2 px-4 py-1.5 bg-turf/60 border-b border-line/60 ${idx > 0 ? "border-t border-t-line/60" : ""}`}>
+                        <span className="font-cond text-[10px] uppercase tracking-widest text-mist/70">Grupo</span>
+                        <span className="font-display text-sm text-grass">{m.g}</span>
+                      </div>
+                    )}
+                    <div className={`bg-panel px-4 ${isLast ? "" : "border-b border-line/40"}`}>
+                      <MatchRow match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate />
                     </div>
-                  )}
-                  <div className="bg-panel divide-y divide-line/40 px-4">
-                    {gm.map((m) => (
-                      <MatchRow key={m.m} match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate />
-                    ))}
-                  </div>
-                </div>
-              ))}
+                  </Fragment>
+                );
+              })}
             </div>
 
             {/* Standings */}
