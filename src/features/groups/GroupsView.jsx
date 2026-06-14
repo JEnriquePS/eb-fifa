@@ -9,43 +9,29 @@ function isMatchLocked(match) {
   return Date.now() >= kickoff.getTime();
 }
 
-function ResultDisplay({ result }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="w-10 h-10 flex items-center justify-center rounded-md bg-grass/15 border border-grass/40 font-cond font-bold text-xl text-grass tabular-nums">
-        {result[0]}
-      </span>
-      <span className="text-mist font-cond">–</span>
-      <span className="w-10 h-10 flex items-center justify-center rounded-md bg-grass/15 border border-grass/40 font-cond font-bold text-xl text-grass tabular-nums">
-        {result[1]}
-      </span>
-    </div>
-  );
-}
 
 function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
   return (
     <div
-      className="flex flex-col items-center gap-0.5"
+      className="flex flex-col items-center gap-1"
       title={locked ? "Partido iniciado — pronóstico cerrado 🔒" : undefined}
       style={locked ? { cursor: "not-allowed" } : undefined}
     >
+      {/* User prediction inputs — always shown */}
       <div className="flex items-center gap-1.5">
-        {hasResult ? (
-          <ResultDisplay result={result} />
-        ) : (
-          <>
-            <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={homeLabel} disabled={locked} />
-            <span className="text-mist font-cond">–</span>
-            <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={awayLabel} disabled={locked} />
-          </>
-        )}
+        <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={homeLabel} disabled={locked} />
+        <span className="text-mist font-cond">–</span>
+        <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={awayLabel} disabled={locked} />
       </div>
-      {hasResult && score?.[0] != null && score?.[1] != null && (
-        <span className="font-cond text-[10px] text-mist/60 tabular-nums leading-none">
-          tu polla: {score[0]}–{score[1]}
-        </span>
+      {/* Official result below when available */}
+      {hasResult && (
+        <div className="flex items-center gap-1 leading-none">
+          <span className="font-cond text-[10px] text-mist/50 uppercase tracking-wider">res.</span>
+          <span className="font-cond text-[11px] font-bold text-grass tabular-nums">
+            {result[0]}–{result[1]}
+          </span>
+        </div>
       )}
     </div>
   );
