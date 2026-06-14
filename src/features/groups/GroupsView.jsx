@@ -14,7 +14,7 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
   return (
     <div
-      className="flex flex-col items-center gap-1"
+      className="flex flex-col items-center gap-1 w-[6.5rem] shrink-0"
       title={locked ? "Partido iniciado — pronóstico cerrado 🔒" : undefined}
       style={locked ? { cursor: "not-allowed" } : undefined}
     >
