@@ -23,6 +23,30 @@ function ResultDisplay({ result }) {
   );
 }
 
+function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
+  const hasResult = result != null && result[0] != null && result[1] != null;
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1.5">
+        {hasResult ? (
+          <ResultDisplay result={result} />
+        ) : (
+          <>
+            <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={homeLabel} disabled={locked} />
+            <span className="text-mist font-cond">–</span>
+            <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={awayLabel} disabled={locked} />
+          </>
+        )}
+      </div>
+      {hasResult && score?.[0] != null && score?.[1] != null && (
+        <span className="font-cond text-[10px] text-mist/60 tabular-nums leading-none">
+          tu polla: {score[0]}–{score[1]}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function MatchRow({ match, score, result, onScore, hideDate = false }) {
   const locked = isMatchLocked(match);
   const hasResult = result != null && result[0] != null && result[1] != null;
@@ -34,34 +58,23 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
     onScore(match.m, next[0] === null && next[1] === null ? undefined : next);
   };
 
+  const homeLabel = `Goles ${TEAMS[match.h].name}`;
+  const awayLabel = `Goles ${TEAMS[match.a].name}`;
+  const dimmed = locked && !hasResult;
+
   // Date-view layout
   if (hideDate) {
     return (
-      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${locked && !hasResult ? "opacity-50" : ""}`}>
+      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${dimmed ? "opacity-50" : ""}`}>
         <TimeChip time={match.time} className="text-[11px] shrink-0" />
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-w-0">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 min-w-0">
           <div className="flex items-center justify-end gap-2 min-w-0">
             <span className="font-cond font-semibold text-sm truncate" title={TEAMS[match.h].name}>
               {TEAMS[match.h].name}
             </span>
             <Flag code={match.h} />
           </div>
-          <div className="flex flex-col items-center gap-0.5">
-            {hasResult ? (
-              <ResultDisplay result={result} />
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
-                <span className="text-mist font-cond">–</span>
-                <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
-              </div>
-            )}
-            {hasResult && score?.[0] != null && score?.[1] != null && (
-              <span className="font-cond text-[10px] text-mist/60 tabular-nums">
-                tu polla: {score[0]}–{score[1]}
-              </span>
-            )}
-          </div>
+          <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
           <div className="flex items-center gap-2 min-w-0">
             <Flag code={match.a} />
             <span className="font-cond font-semibold text-sm truncate" title={TEAMS[match.a].name}>
@@ -79,30 +92,15 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
 
   // Group-card layout
   return (
-    <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${locked && !hasResult ? "opacity-50" : ""}`}>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+    <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${dimmed ? "opacity-50" : ""}`}>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
         <div className="flex items-center justify-end gap-2 min-w-0">
           <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.h].name}>
             {TEAMS[match.h].name}
           </span>
           <Flag code={match.h} />
         </div>
-        <div className="flex flex-col items-center gap-0.5">
-          {hasResult ? (
-            <ResultDisplay result={result} />
-          ) : (
-            <div className="flex items-center gap-1.5">
-              <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
-              <span className="text-mist font-cond">–</span>
-              <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
-            </div>
-          )}
-          {hasResult && score?.[0] != null && score?.[1] != null && (
-            <span className="font-cond text-[10px] text-mist/60 tabular-nums">
-              tu polla: {score[0]}–{score[1]}
-            </span>
-          )}
-        </div>
+        <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
         <div className="flex items-center gap-2 min-w-0">
           <Flag code={match.a} />
           <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.a].name}>

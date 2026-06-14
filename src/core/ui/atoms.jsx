@@ -45,7 +45,7 @@ export function ScoreInput({ value, onChange, label, disabled = false }) {
       max="20"
       aria-label={label}
       disabled={disabled}
-      className="score w-10 h-10 rounded-md bg-night border border-line text-center font-cond font-bold text-xl text-chalk tabular-nums transition-colors duration-200 hover:border-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line"
+      className="score w-10 h-10 rounded-md bg-night border border-line text-center font-cond font-bold text-xl text-chalk tabular-nums transition-colors duration-200 hover:border-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel cursor-pointer disabled:cursor-not-allowed disabled:border-dashed disabled:text-mist/50 disabled:hover:border-line"
       value={value ?? ""}
       onChange={(e) => {
         if (disabled) return;
