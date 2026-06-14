@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Archivo Black", sans-serif;
+  --font-cond: "Barlow Condensed", sans-serif;
+  --font-body: "Barlow", sans-serif;
+
+  --color-night: #060f0a;
+  --color-turf: #0a1a10;
+  --color-panel: #0c2014;
+  --color-panel-2: #123022;
+  --color-line: #1c3a27;
+  --color-chalk: #ecf6ee;
+  --color-mist: #93b89f;
+  --color-grass: #3fdc81;
+  --color-gold: #eec85e;
+  --color-amber: #dfa044;
+  --color-card: #d94f3d;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-chalk);
+  background-color: var(--color-night);
+  background-image:
+    /* reflectores de estadio */
+    radial-gradient(ellipse 80% 50% at 15% -10%, rgba(63, 220, 129, 0.13), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 85% -10%, rgba(238, 200, 94, 0.09), transparent 60%),
+    /* franjas de césped recién cortado */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 110px,
+      rgba(255, 255, 255, 0.014) 110px,
+      rgba(255, 255, 255, 0.014) 220px
+    );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* grano sutil de pantalla de estadio */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* línea de cal en títulos */
+.chalk-rule {
+  background: linear-gradient(90deg, transparent, rgba(236, 246, 238, 0.35), transparent);
+  height: 1px;
+}
+
+.text-outline {
+  -webkit-text-stroke: 1.5px rgba(236, 246, 238, 0.5);
+  color: transparent;
+}
+
+/* inputs de marcador */
+input.score::-webkit-outer-spin-button,
+input.score::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input.score {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* scrollbar del bracket */
+.bracket-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.bracket-scroll::-webkit-scrollbar-track {
+  background: var(--color-turf);
+  border-radius: 5px;
+}
+.bracket-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 5px;
+}
+.bracket-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-grass);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes shine {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(238, 200, 94, 0.55)); }
+  50% { filter: drop-shadow(0 0 18px rgba(238, 200, 94, 0.9)); }
+}
+.trophy-shine {
+  animation: shine 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .trophy-shine { animation: none; }
+}
