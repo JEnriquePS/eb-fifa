@@ -13,7 +13,7 @@ function LoginScreen() {
     setError(null);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin + import.meta.env.BASE_URL },
+      options: { emailRedirectTo: window.location.origin + import.meta.env.BASE_URL.replace(/\/$/, "") },
     });
     if (error) setError(error.message);
     else setSent(true);
