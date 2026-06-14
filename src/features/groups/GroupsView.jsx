@@ -3,8 +3,25 @@ import { GROUPS, TEAMS } from "../../core/data/teams";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { Flag, ScoreInput, TimeChip, formatDate, todayISO } from "../../core/ui/atoms";
 
+// Returns true if the match kickoff has already passed (Lima time = UTC-5)
+function isMatchLocked(match) {
+  const kickoff = new Date(`${match.date}T${match.time}:00-05:00`);
+  return Date.now() >= kickoff.getTime();
+}
+
+function LockBadge() {
+  return (
+    <span className="font-cond text-[10px] uppercase tracking-wider text-mist/60 select-none" title="Partido iniciado — pronóstico cerrado">
+      🔒 Cerrado
+    </span>
+  );
+}
+
 function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }) {
+  const locked = isMatchLocked(match);
+
   const set = (idx, v) => {
+    if (locked) return;
     const next = [score?.[0] ?? null, score?.[1] ?? null];
     next[idx] = v;
     onScore(match.m, next[0] === null && next[1] === null ? undefined : next);
@@ -13,7 +30,7 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
   // Date-view layout: compact, no border (container uses divide-y)
   if (hideDate) {
     return (
-      <div className="py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3">
+      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${locked ? "opacity-60" : ""}`}>
         <TimeChip time={match.time} className="text-[11px] shrink-0" />
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-w-0">
           <div className="flex items-center justify-end gap-2 min-w-0">
@@ -23,9 +40,9 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
             <Flag code={match.h} />
           </div>
           <div className="flex items-center gap-1.5">
-            <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} />
+            <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
             <span className="text-mist font-cond">–</span>
-            <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} />
+            <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <Flag code={match.a} />
@@ -34,8 +51,8 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
             </span>
           </div>
         </div>
-        <div className="text-right hidden sm:block shrink-0">
-          <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>
+        <div className="text-right hidden sm:flex sm:flex-col sm:items-end shrink-0">
+          {locked ? <LockBadge /> : <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>}
           <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60">{match.city}</p>
         </div>
       </div>
@@ -44,7 +61,7 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
 
   // Group-card layout (used in "Por Grupo" tab)
   return (
-    <div className="py-2.5 border-b border-line/60 last:border-b-0">
+    <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${locked ? "opacity-60" : ""}`}>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="flex items-center justify-end gap-2 min-w-0">
           <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.h].name}>
@@ -53,9 +70,9 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
           <Flag code={match.h} />
         </div>
         <div className="flex items-center gap-1.5">
-          <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} />
+          <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
           <span className="text-mist font-cond">–</span>
-          <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} />
+          <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
         </div>
         <div className="flex items-center gap-2 min-w-0">
           <Flag code={match.a} />
@@ -65,7 +82,7 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
         </div>
       </div>
       <div className="mt-1 flex items-center justify-center gap-2 text-[11px] text-mist">
-        <span>{formatDate(match.date)}</span>
+        {locked ? <LockBadge /> : <span>{formatDate(match.date)}</span>}
         <TimeChip time={match.time} className="text-[11px]" />
         <span className="truncate hidden sm:inline">{match.stadium}</span>
       </div>

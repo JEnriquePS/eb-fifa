@@ -36,7 +36,7 @@ export function TimeChip({ time, className = "" }) {
   );
 }
 
-export function ScoreInput({ value, onChange, label }) {
+export function ScoreInput({ value, onChange, label, disabled = false }) {
   return (
     <input
       type="number"
@@ -44,9 +44,11 @@ export function ScoreInput({ value, onChange, label }) {
       min="0"
       max="20"
       aria-label={label}
-      className="score w-10 h-10 rounded-md bg-night border border-line text-center font-cond font-bold text-xl text-chalk tabular-nums transition-colors duration-200 hover:border-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel cursor-pointer"
+      disabled={disabled}
+      className="score w-10 h-10 rounded-md bg-night border border-line text-center font-cond font-bold text-xl text-chalk tabular-nums transition-colors duration-200 hover:border-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line"
       value={value ?? ""}
       onChange={(e) => {
+        if (disabled) return;
         const n = parseInt(e.target.value, 10);
         onChange(Number.isNaN(n) ? null : Math.max(0, Math.min(20, n)));
       }}
