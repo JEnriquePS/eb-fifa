@@ -56,10 +56,14 @@ export function usePollaData(user) {
             : db.upsertGroupPred(user.id, Number(matchId), score[0], score[1])
         )
       );
-      // Limpiar solo las entradas ya persistidas
+      // Solo limpiar del local las entradas eliminadas (score === null).
+      // Las guardadas se mantienen en local para evitar el parpadeo entre
+      // el flush y el reload del real-time.
       setLocalGroupScores((prev) => {
         const next = { ...prev };
-        for (const key of Object.keys(pending)) delete next[key];
+        for (const [key, score] of Object.entries(pending)) {
+          if (score === null) delete next[key];
+        }
         return next;
       });
       setSyncStatus("synced");

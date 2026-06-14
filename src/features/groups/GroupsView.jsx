@@ -12,27 +12,31 @@ function isMatchLocked(match) {
 
 function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
+  const hasPrediction = score?.[0] != null && score?.[1] != null;
   return (
     <div
-      className="flex flex-col items-center gap-1"
+      className="flex flex-col items-center gap-0.5"
       title={locked ? "Partido iniciado — pronóstico cerrado 🔒" : undefined}
       style={locked ? { cursor: "not-allowed" } : undefined}
     >
-      {/* User prediction inputs — always shown */}
       <div className="flex items-center gap-1.5">
         <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={homeLabel} disabled={locked} />
         <span className="text-mist font-cond">–</span>
         <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={awayLabel} disabled={locked} />
       </div>
-      {/* Official result below when available */}
-      {hasResult && (
-        <div className="flex items-center gap-1 leading-none">
-          <span className="font-cond text-[10px] text-mist/50 uppercase tracking-wider">res.</span>
-          <span className="font-cond text-[11px] font-bold text-grass tabular-nums">
-            {result[0]}–{result[1]}
-          </span>
-        </div>
-      )}
+      {/* Saved confirmation or official result */}
+      <div className="h-4 flex items-center justify-center gap-1 leading-none">
+        {hasResult ? (
+          <>
+            <span className="font-cond text-[10px] text-mist/50 uppercase tracking-wider">res.</span>
+            <span className="font-cond text-[11px] font-bold text-grass tabular-nums">
+              {result[0]}–{result[1]}
+            </span>
+          </>
+        ) : hasPrediction && !locked ? (
+          <span className="font-cond text-[10px] text-grass/70">✓ guardado</span>
+        ) : null}
+      </div>
     </div>
   );
 }
