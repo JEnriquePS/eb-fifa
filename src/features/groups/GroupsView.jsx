@@ -286,7 +286,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
 
         // Sort by group then time so dividers appear cleanly
         const sorted = [...matches].sort(
-          (a, b) => a.g.localeCompare(b.g) || a.time.localeCompare(b.time)
+          (a, b) => a.time.localeCompare(b.time) || a.g.localeCompare(b.g)
         );
         // Build segments [{group, matches}] for group dividers
         const segments = sorted.reduce((acc, m) => {
