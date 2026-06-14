@@ -163,11 +163,13 @@ function Standings({ table, complete, qualifiedThird }) {
   );
 }
 
-// Standings card — always shown on the right sidebar in date view
-function StandingsCard({ group, ctx }) {
-  const complete = ctx.complete[group];
-  const thirdCode = ctx.tables[group][2]?.code;
-  const qualifiedThird = ctx.thirds?.qualified.has(thirdCode) ?? false;
+// Standings card — uses official results ctx, falls back to predictions ctx
+function StandingsCard({ group, ctx, resultsCtx }) {
+  const activeCtx = resultsCtx ?? ctx;
+  const complete = activeCtx.complete[group];
+  const thirdCode = activeCtx.tables[group][2]?.code;
+  const qualifiedThird = activeCtx.thirds?.qualified.has(thirdCode) ?? false;
+  const hasOfficialData = resultsCtx?.tables[group]?.some((r) => r.pj > 0);
   return (
     <div className="rounded-xl border border-line bg-panel overflow-hidden min-w-[180px]">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-line bg-turf/50">
@@ -178,20 +180,26 @@ function StandingsCard({ group, ctx }) {
             Completo
           </span>
         )}
+        {!hasOfficialData && (
+          <span className="ml-auto font-cond text-[10px] uppercase tracking-widest text-mist/50">
+            Tu pronóstico
+          </span>
+        )}
       </div>
       <div className="px-2 py-1.5">
-        <Standings table={ctx.tables[group]} complete={complete} qualifiedThird={qualifiedThird} />
+        <Standings table={activeCtx.tables[group]} complete={complete} qualifiedThird={qualifiedThird} />
       </div>
     </div>
   );
 }
 
 // Group card for "Por Grupo" tab
-function GroupCard({ group, ctx, scores, results, onScore, index }) {
+function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index }) {
+  const activeCtx = resultsCtx ?? ctx;
   const matches = GROUP_MATCHES.filter((m) => m.g === group).sort((a, b) => a.md - b.md || a.m - b.m);
-  const complete = ctx.complete[group];
-  const thirdCode = ctx.tables[group][2]?.code;
-  const qualifiedThird = ctx.thirds?.qualified.has(thirdCode) ?? false;
+  const complete = activeCtx.complete[group];
+  const thirdCode = activeCtx.tables[group][2]?.code;
+  const qualifiedThird = activeCtx.thirds?.qualified.has(thirdCode) ?? false;
 
   return (
     <section
@@ -216,14 +224,14 @@ function GroupCard({ group, ctx, scores, results, onScore, index }) {
           </span>
         ) : (
           <span className="font-cond text-xs uppercase tracking-widest text-mist">
-            {matches.filter((m) => scores[m.m]?.every?.((x) => Number.isInteger(x))).length}/6
+            {matches.filter((m) => scores[m.m]?.every?.((x) => Number.isInteger(x))).length}/6 tus picks
           </span>
         )}
       </header>
       <div className="chalk-rule mx-4" />
 
       <div className="bg-turf/70 border-b border-line px-2 py-2 relative">
-        <Standings table={ctx.tables[group]} complete={complete} qualifiedThird={qualifiedThird} />
+        <Standings table={activeCtx.tables[group]} complete={complete} qualifiedThird={qualifiedThird} />
       </div>
 
       <div className="px-4 py-1 relative">
@@ -235,7 +243,7 @@ function GroupCard({ group, ctx, scores, results, onScore, index }) {
   );
 }
 
-function ByDateView({ scores, results, onScore, ctx }) {
+function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
   const today = todayISO();
   const focusRef = useRef(null);
 
@@ -332,7 +340,7 @@ function ByDateView({ scores, results, onScore, ctx }) {
             <div className="flex flex-wrap justify-center gap-2">
               {groups.map((g) => (
                 <div key={g} className="flex-1 min-w-[175px] max-w-[280px]">
-                  <StandingsCard group={g} ctx={ctx} />
+                  <StandingsCard group={g} ctx={ctx} resultsCtx={resultsCtx} />
                 </div>
               ))}
             </div>
@@ -343,7 +351,7 @@ function ByDateView({ scores, results, onScore, ctx }) {
   );
 }
 
-export default function GroupsView({ ctx, scores, results, onScore }) {
+export default function GroupsView({ ctx, resultsCtx, scores, results, onScore }) {
   const [mode, setMode] = useState("date");
 
   return (
@@ -370,7 +378,7 @@ export default function GroupsView({ ctx, scores, results, onScore }) {
         </span>
       </div>
 
-      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} />}
+      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} />}
 
       {mode === "group" && (
         <>
@@ -387,7 +395,7 @@ export default function GroupsView({ ctx, scores, results, onScore }) {
           </div>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {Object.keys(GROUPS).map((g, i) => (
-              <GroupCard key={g} group={g} ctx={ctx} scores={scores} results={results} onScore={onScore} index={i} />
+              <GroupCard key={g} group={g} ctx={ctx} resultsCtx={resultsCtx} scores={scores} results={results} onScore={onScore} index={i} />
             ))}
           </div>
         </>
