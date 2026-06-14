@@ -4,6 +4,8 @@ Polla futbolera para la Copa Mundial FIFA 2026 — pronostica los 104 partidos, 
 
 **App:** https://jenriqueps.github.io/eb-fifa
 
+![Screenshot de la app](docs/img/screenshot.png)
+
 ---
 
 ## ¿Cómo funciona?
