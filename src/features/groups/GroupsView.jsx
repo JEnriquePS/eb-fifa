@@ -50,7 +50,7 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
 
   const homeLabel = `Goles ${TEAMS[match.h].name}`;
   const awayLabel = `Goles ${TEAMS[match.a].name}`;
-  const dimmed = locked && !hasResult;
+  const dimmed = locked;
 
   // Date-view layout
   if (hideDate) {
