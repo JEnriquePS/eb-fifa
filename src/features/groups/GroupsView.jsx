@@ -9,16 +9,23 @@ function isMatchLocked(match) {
   return Date.now() >= kickoff.getTime();
 }
 
-function LockBadge() {
+function ResultDisplay({ result }) {
   return (
-    <span className="font-cond text-[10px] uppercase tracking-wider text-mist/60 select-none" title="Partido iniciado — pronóstico cerrado">
-      🔒 Cerrado
-    </span>
+    <div className="flex items-center gap-1.5">
+      <span className="w-10 h-10 flex items-center justify-center rounded-md bg-grass/15 border border-grass/40 font-cond font-bold text-xl text-grass tabular-nums">
+        {result[0]}
+      </span>
+      <span className="text-mist font-cond">–</span>
+      <span className="w-10 h-10 flex items-center justify-center rounded-md bg-grass/15 border border-grass/40 font-cond font-bold text-xl text-grass tabular-nums">
+        {result[1]}
+      </span>
+    </div>
   );
 }
 
-function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }) {
+function MatchRow({ match, score, result, onScore, hideDate = false }) {
   const locked = isMatchLocked(match);
+  const hasResult = result != null && result[0] != null && result[1] != null;
 
   const set = (idx, v) => {
     if (locked) return;
@@ -27,10 +34,10 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
     onScore(match.m, next[0] === null && next[1] === null ? undefined : next);
   };
 
-  // Date-view layout: compact, no border (container uses divide-y)
+  // Date-view layout
   if (hideDate) {
     return (
-      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${locked ? "opacity-60" : ""}`}>
+      <div className={`py-2 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-x-3 ${locked && !hasResult ? "opacity-50" : ""}`}>
         <TimeChip time={match.time} className="text-[11px] shrink-0" />
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-w-0">
           <div className="flex items-center justify-end gap-2 min-w-0">
@@ -39,10 +46,21 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
             </span>
             <Flag code={match.h} />
           </div>
-          <div className="flex items-center gap-1.5">
-            <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
-            <span className="text-mist font-cond">–</span>
-            <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
+          <div className="flex flex-col items-center gap-0.5">
+            {hasResult ? (
+              <ResultDisplay result={result} />
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
+                <span className="text-mist font-cond">–</span>
+                <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
+              </div>
+            )}
+            {hasResult && score?.[0] != null && score?.[1] != null && (
+              <span className="font-cond text-[10px] text-mist/60 tabular-nums">
+                tu polla: {score[0]}–{score[1]}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <Flag code={match.a} />
@@ -52,16 +70,16 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
           </div>
         </div>
         <div className="text-right hidden sm:flex sm:flex-col sm:items-end shrink-0">
-          {locked ? <LockBadge /> : <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>}
+          <p className="font-cond text-xs text-mist leading-tight truncate max-w-[130px]">{match.stadium}</p>
           <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60">{match.city}</p>
         </div>
       </div>
     );
   }
 
-  // Group-card layout (used in "Por Grupo" tab)
+  // Group-card layout
   return (
-    <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${locked ? "opacity-60" : ""}`}>
+    <div className={`py-2.5 border-b border-line/60 last:border-b-0 ${locked && !hasResult ? "opacity-50" : ""}`}>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="flex items-center justify-end gap-2 min-w-0">
           <span className="font-cond font-semibold text-base truncate" title={TEAMS[match.h].name}>
@@ -69,10 +87,21 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
           </span>
           <Flag code={match.h} />
         </div>
-        <div className="flex items-center gap-1.5">
-          <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
-          <span className="text-mist font-cond">–</span>
-          <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
+        <div className="flex flex-col items-center gap-0.5">
+          {hasResult ? (
+            <ResultDisplay result={result} />
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <ScoreInput value={score?.[0]} onChange={(v) => set(0, v)} label={`Goles ${TEAMS[match.h].name}`} disabled={locked} />
+              <span className="text-mist font-cond">–</span>
+              <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={`Goles ${TEAMS[match.a].name}`} disabled={locked} />
+            </div>
+          )}
+          {hasResult && score?.[0] != null && score?.[1] != null && (
+            <span className="font-cond text-[10px] text-mist/60 tabular-nums">
+              tu polla: {score[0]}–{score[1]}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 min-w-0">
           <Flag code={match.a} />
@@ -82,7 +111,7 @@ function MatchRow({ match, score, onScore, showGroup = false, hideDate = false }
         </div>
       </div>
       <div className="mt-1 flex items-center justify-center gap-2 text-[11px] text-mist">
-        {locked ? <LockBadge /> : <span>{formatDate(match.date)}</span>}
+        <span>{formatDate(match.date)}</span>
         <TimeChip time={match.time} className="text-[11px]" />
         <span className="truncate hidden sm:inline">{match.stadium}</span>
       </div>
@@ -160,7 +189,7 @@ function StandingsCard({ group, ctx }) {
 }
 
 // Group card for "Por Grupo" tab
-function GroupCard({ group, ctx, scores, onScore, index }) {
+function GroupCard({ group, ctx, scores, results, onScore, index }) {
   const matches = GROUP_MATCHES.filter((m) => m.g === group).sort((a, b) => a.md - b.md || a.m - b.m);
   const complete = ctx.complete[group];
   const thirdCode = ctx.tables[group][2]?.code;
@@ -201,14 +230,14 @@ function GroupCard({ group, ctx, scores, onScore, index }) {
 
       <div className="px-4 py-1 relative">
         {matches.map((match) => (
-          <MatchRow key={match.m} match={match} score={scores[match.m]} onScore={onScore} />
+          <MatchRow key={match.m} match={match} score={scores[match.m]} result={results?.[match.m]} onScore={onScore} />
         ))}
       </div>
     </section>
   );
 }
 
-function ByDateView({ scores, onScore, ctx }) {
+function ByDateView({ scores, results, onScore, ctx }) {
   const today = todayISO();
   const focusRef = useRef(null);
 
@@ -294,7 +323,7 @@ function ByDateView({ scores, onScore, ctx }) {
                   )}
                   <div className="bg-panel divide-y divide-line/40 px-4">
                     {gm.map((m) => (
-                      <MatchRow key={m.m} match={m} score={scores[m.m]} onScore={onScore} hideDate />
+                      <MatchRow key={m.m} match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate />
                     ))}
                   </div>
                 </div>
@@ -316,7 +345,7 @@ function ByDateView({ scores, onScore, ctx }) {
   );
 }
 
-export default function GroupsView({ ctx, scores, onScore }) {
+export default function GroupsView({ ctx, scores, results, onScore }) {
   const [mode, setMode] = useState("date");
 
   return (
@@ -343,7 +372,7 @@ export default function GroupsView({ ctx, scores, onScore }) {
         </span>
       </div>
 
-      {mode === "date" && <ByDateView scores={scores} onScore={onScore} ctx={ctx} />}
+      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} />}
 
       {mode === "group" && (
         <>
@@ -360,7 +389,7 @@ export default function GroupsView({ ctx, scores, onScore }) {
           </div>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {Object.keys(GROUPS).map((g, i) => (
-              <GroupCard key={g} group={g} ctx={ctx} scores={scores} onScore={onScore} index={i} />
+              <GroupCard key={g} group={g} ctx={ctx} scores={scores} results={results} onScore={onScore} index={i} />
             ))}
           </div>
         </>

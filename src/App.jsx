@@ -152,7 +152,7 @@ function AppShell({ user, signOut }) {
       {/* ── Contenido ── */}
       <main className="mx-auto max-w-7xl px-4 py-7">
         {tab === "groups" && (
-          <GroupsView ctx={ctx} scores={data.myGroupScores} onScore={data.onScore} />
+          <GroupsView ctx={ctx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} />
         )}
         {tab === "bracket" && (
           <BracketView ctx={ctx} onPick={data.onPick} />
