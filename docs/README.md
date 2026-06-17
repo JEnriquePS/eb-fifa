@@ -27,5 +27,12 @@
 
 | Archivo | Contenido |
 |---------|-----------|
+| [reference/product-overview.md](./reference/product-overview.md) | Descripción completa de la app: roles, funcionalidades, puntuación |
 | [reference/er-diagram.md](./reference/er-diagram.md) | Diagrama entidad-relación de la base de datos |
 | [reference/requirements.md](./reference/requirements.md) | Requerimientos funcionales y no funcionales |
+
+## Guías
+
+| Archivo | Contenido |
+|---------|-----------|
+| [guides/manual-usuario.md](./guides/manual-usuario.md) | Manual de usuario: Para todos · Para Participantes · Para Admin |
