@@ -1,63 +1,125 @@
 import { useEffect, useState } from "react";
 import { supabase, db } from "../../lib/supabase";
 
+const INPUT_CLS =
+  "w-full rounded-md border border-line bg-night px-3 py-2.5 font-cond text-base text-chalk placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel";
+const BTN_CLS =
+  "w-full cursor-pointer rounded-md bg-grass px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-night transition-opacity duration-150 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-panel";
+
+function Logo() {
+  return (
+    <div className="text-center mb-8">
+      <span className="text-7xl" role="img" aria-label="Balón">⚽</span>
+      <h1 className="mt-4 font-display text-3xl">
+        <span className="text-chalk">LA QUINIELA</span>{" "}
+        <span className="text-gold">MUNDIALISTA</span>
+      </h1>
+      <p className="mt-1 font-cond text-mist text-sm tracking-wide">
+        Copa Mundial FIFA 2026 · hora peruana 🇵🇪
+      </p>
+    </div>
+  );
+}
+
 function LoginScreen() {
+  const [step, setStep] = useState("code"); // "code" | "auth"
+  const [mode, setMode] = useState("register"); // "register" | "login"
+  const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const send = async (e) => {
+  const ACCESS_CODE = import.meta.env.VITE_ACCESS_CODE;
+
+  const validateCode = (e) => {
+    e.preventDefault();
+    if (code.trim().toUpperCase() === ACCESS_CODE?.toUpperCase()) {
+      setError(null);
+      setStep("auth");
+    } else {
+      setError("Código incorrecto.");
+    }
+  };
+
+  const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: window.location.origin + import.meta.env.BASE_URL.replace(/\/$/, "") },
-    });
-    if (error) setError(error.message);
-    else setSent(true);
+
+    if (mode === "register") {
+      const { error } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (error) {
+        if (error.message.toLowerCase().includes("already registered")) {
+          setMode("login");
+          setError("Ya tienes cuenta. Inicia sesión.");
+        } else {
+          setError(error.message);
+        }
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) setError("Email o contraseña incorrectos.");
+    }
+
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <span className="text-7xl" role="img" aria-label="Balón">⚽</span>
-          <h1 className="mt-4 font-display text-3xl">
-            <span className="text-chalk">LA QUINIELA</span>{" "}
-            <span className="text-gold">MUNDIALISTA</span>
-          </h1>
-          <p className="mt-1 font-cond text-mist text-sm tracking-wide">
-            Copa Mundial FIFA 2026 · hora peruana 🇵🇪
-          </p>
-        </div>
+        <Logo />
 
         <div className="rounded-xl border border-line bg-panel p-6 shadow-lg">
-          {sent ? (
-            <div className="text-center">
-              <span className="text-4xl" role="img" aria-label="Email">📧</span>
-              <h2 className="mt-3 font-display text-lg text-chalk">¡Revisá tu correo!</h2>
-              <p className="mt-2 font-cond text-sm text-mist leading-relaxed">
-                Te enviamos un link a <strong className="text-chalk">{email}</strong>.
-                Haz clic en el link para entrar — no necesitas contraseña.
+
+          {step === "code" ? (
+            <>
+              <h2 className="font-display text-lg text-chalk mb-1">Código de acceso</h2>
+              <p className="font-cond text-sm text-mist mb-5">
+                Ingresa el código que te dio la empresa para participar.
               </p>
-              <button
-                onClick={() => { setSent(false); setEmail(""); }}
-                className="mt-4 cursor-pointer font-cond text-xs uppercase tracking-widest text-mist hover:text-chalk underline-offset-2 hover:underline"
-              >
-                Usar otro correo
-              </button>
-            </div>
+              <form onSubmit={validateCode} className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  autoComplete="off"
+                  placeholder="Ej: EB2026"
+                  value={code}
+                  onChange={(e) => { setCode(e.target.value); setError(null); }}
+                  className={INPUT_CLS}
+                />
+                {error && <p className="font-cond text-xs text-card" role="alert">{error}</p>}
+                <button type="submit" disabled={!code.trim()} className={BTN_CLS}>
+                  Continuar
+                </button>
+              </form>
+            </>
           ) : (
             <>
-              <h2 className="font-display text-lg text-chalk mb-1">Entrar a la quiniela</h2>
-              <p className="font-cond text-sm text-mist mb-5">
-                Ingresa tu correo y te enviamos un link mágico — sin contraseña.
-              </p>
-              <form onSubmit={send} className="flex flex-col gap-3">
+              {/* Toggle registro / login */}
+              <div className="flex rounded-md border border-line overflow-hidden mb-5">
+                <button
+                  type="button"
+                  onClick={() => { setMode("register"); setError(null); }}
+                  className={`flex-1 py-2 font-cond text-sm font-bold uppercase tracking-wider cursor-pointer transition-colors duration-150 ${
+                    mode === "register" ? "bg-grass text-night" : "bg-transparent text-mist hover:text-chalk"
+                  }`}
+                >
+                  Registrarse
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setError(null); }}
+                  className={`flex-1 py-2 font-cond text-sm font-bold uppercase tracking-wider cursor-pointer transition-colors duration-150 ${
+                    mode === "login" ? "bg-grass text-night" : "bg-transparent text-mist hover:text-chalk"
+                  }`}
+                >
+                  Iniciar sesión
+                </button>
+              </div>
+
+              <form onSubmit={handleAuth} className="flex flex-col gap-3">
                 <input
                   type="email"
                   required
@@ -65,19 +127,34 @@ function LoginScreen() {
                   placeholder="tucorreo@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-md border border-line bg-night px-3 py-2.5 font-cond text-base text-chalk placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel"
+                  className={INPUT_CLS}
                 />
-                {error && (
-                  <p className="font-cond text-xs text-card" role="alert">{error}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={loading || !email.trim()}
-                  className="w-full cursor-pointer rounded-md bg-grass px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-night transition-opacity duration-150 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
-                >
-                  {loading ? "Enviando…" : "Enviar link de acceso"}
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Contraseña (mínimo 6 caracteres)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={INPUT_CLS}
+                />
+                {error && <p className="font-cond text-xs text-card" role="alert">{error}</p>}
+                <button type="submit" disabled={loading || !email.trim() || !password} className={BTN_CLS}>
+                  {loading
+                    ? "Cargando…"
+                    : mode === "register"
+                    ? "Crear cuenta"
+                    : "Entrar"}
                 </button>
               </form>
+
+              <button
+                type="button"
+                onClick={() => { setStep("code"); setCode(""); setError(null); }}
+                className="mt-4 w-full cursor-pointer font-cond text-xs uppercase tracking-widest text-mist hover:text-chalk text-center"
+              >
+                ← Cambiar código
+              </button>
             </>
           )}
         </div>
@@ -124,13 +201,13 @@ function NameSetup({ user, onDone }) {
               placeholder="Tu nombre (ej: Pepito, El Crack)"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-md border border-line bg-night px-3 py-2.5 font-cond text-base text-chalk placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-grass focus:ring-offset-2 focus:ring-offset-panel"
+              className={INPUT_CLS}
             />
             {error && <p className="font-cond text-xs text-card">{error}</p>}
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="w-full cursor-pointer rounded-md bg-grass px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-night transition-opacity duration-150 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+              className={BTN_CLS}
             >
               {loading ? "Guardando…" : "Entrar a la quiniela →"}
             </button>
@@ -153,7 +230,7 @@ function LoadingScreen() {
 }
 
 export default function AuthGate({ user, authLoading, children }) {
-  const [profile, setProfile] = useState(undefined); // undefined=checking, null=no perfil
+  const [profile, setProfile] = useState(undefined);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
