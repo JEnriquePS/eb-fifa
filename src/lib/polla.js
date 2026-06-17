@@ -35,6 +35,12 @@ export const isGroupComplete = (group, scores) =>
 export const countPredicted = (scores) =>
   GROUP_MATCHES.filter((m) => validScore(scores[m.m])).length;
 
+export function pendingMatchesProgress(scores, today) {
+  const pending = GROUP_MATCHES.filter((m) => m.date >= today);
+  const predicted = pending.filter((m) => validScore(scores[m.m])).length;
+  return { predicted, total: pending.length };
+}
+
 // ── Mejores terceros ─────────────────────────────────────────────────────────
 // Con los 12 grupos completos: se rankean los 12 terceros (pts, dg, gf) y
 // clasifican los 8 mejores. Luego se asignan a los slots "3XXXXX" del bracket

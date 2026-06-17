@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "./core/hooks/useAuth";
 import { usePollaData } from "./core/hooks/usePollaData";
-import { buildContext, countPredicted, koWinner } from "./lib/polla";
+import { buildContext, pendingMatchesProgress, koWinner } from "./lib/polla";
 import { TEAMS } from "./core/data/teams";
 import { Flag } from "./core/ui/atoms";
 import AuthGate from "./features/auth/AuthGate";
@@ -41,7 +41,8 @@ function AppShell({ user, signOut }) {
 
   const tabs = ALL_TABS.filter((t) => !t.adminOnly || data.me?.is_admin);
 
-  const predicted = countPredicted(data.myGroupScores);
+  const today = new Date().toISOString().slice(0, 10);
+  const { predicted, total: pendingTotal } = pendingMatchesProgress(data.myGroupScores, today);
   const champion = koWinner(104, ctx);
   const syncInfo = SYNC_LABELS[data.syncStatus];
 
@@ -108,11 +109,11 @@ function AppShell({ user, signOut }) {
               <div className="h-1.5 w-32 sm:w-48 overflow-hidden rounded-full bg-panel border border-line">
                 <div
                   className="h-full bg-grass transition-all duration-500"
-                  style={{ width: `${(predicted / 72) * 100}%` }}
+                  style={{ width: `${pendingTotal > 0 ? (predicted / pendingTotal) * 100 : 100}%` }}
                 />
               </div>
               <span className="font-cond text-sm text-mist tabular-nums">
-                {predicted}/72
+                {predicted}/{pendingTotal}
               </span>
             </div>
 
