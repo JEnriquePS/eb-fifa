@@ -17,6 +17,11 @@ function Logo() {
       <p className="mt-1 font-cond text-mist text-sm tracking-wide">
         Copa Mundial FIFA 2026 · hora peruana 🇵🇪
       </p>
+      {/* Sponsor */}
+      <div className="mt-5 flex items-center justify-center gap-3">
+        <span className="font-cond text-[10px] uppercase tracking-widest text-mist">Presentado por</span>
+        <img src="/images/eb-logo-w.png" alt="EB Consulting" className="h-6 object-contain" />
+      </div>
     </div>
   );
 }
@@ -66,8 +71,18 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 relative"
+      style={{
+        backgroundImage: "url('/images/fondo-industria.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay oscuro */}
+      <div className="absolute inset-0 bg-night/85" aria-hidden="true" />
+
+      <div className="relative w-full max-w-sm">
         <Logo />
 
         <div className="rounded-xl border border-line bg-panel p-6 shadow-lg">
@@ -162,6 +177,11 @@ function LoginScreen() {
         <p className="mt-4 text-center font-cond text-xs uppercase tracking-widest text-mist">
           11 jun – 19 jul · 48 selecciones · 104 partidos
         </p>
+
+        {/* Badge cliente */}
+        <div className="mt-6 flex justify-center">
+          <img src="/images/DF-BREWERY.png" alt="DF Brewery — Automation Specialist" className="h-16 object-contain opacity-60" />
+        </div>
       </div>
     </div>
   );
