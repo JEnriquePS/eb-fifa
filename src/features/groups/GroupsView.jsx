@@ -231,6 +231,7 @@ function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index }) 
 function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
   const today = todayISO();
   const focusRef = useRef(null);
+  const [collapsed, setCollapsed] = useState(() => new Set());
 
   const byDate = useMemo(() => {
     const sorted = [...GROUP_MATCHES].sort(
@@ -249,6 +250,18 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
     if (dates.includes(today)) return today;
     return dates.find((d) => d > today) ?? dates[dates.length - 1];
   }, [byDate, today]);
+
+  useEffect(() => {
+    setCollapsed(new Set(byDate.map(([d]) => d).filter((d) => d < today)));
+  }, [byDate, today]);
+
+  const toggleDate = (date) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(date) ? next.delete(date) : next.add(date);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -270,6 +283,9 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
           (a, b) => a.time.localeCompare(b.time) || a.g.localeCompare(b.g)
         );
 
+        const isPast = date < today;
+        const isCollapsed = collapsed.has(date);
+
         return (
           <section
             key={date}
@@ -278,7 +294,10 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
             style={{ animationDelay: `${Math.min(di, 8) * 40}ms` }}
           >
             {/* Date header */}
-            <header className="sticky top-[3.4rem] z-10 mb-3 flex items-center gap-3 bg-night/95 backdrop-blur-sm py-1.5">
+            <header
+              className={`sticky top-[3.4rem] z-10 mb-3 flex items-center gap-3 bg-night/95 backdrop-blur-sm py-1.5 ${isPast ? "cursor-pointer select-none" : ""}`}
+              onClick={isPast ? () => toggleDate(date) : undefined}
+            >
               <h3 className={`font-display text-base uppercase tracking-wide ${isToday ? "text-grass" : "text-chalk"}`}>
                 {formatDate(date)}
               </h3>
@@ -291,9 +310,15 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
                 {matches.length} partido{matches.length > 1 ? "s" : ""}
               </span>
               <div className="chalk-rule flex-1" />
+              {isPast && (
+                <span className="font-cond text-xs text-mist/60 ml-1">
+                  {isCollapsed ? "▶" : "▼"}
+                </span>
+              )}
             </header>
 
             {/* All matches in one shared container so rows share the same width */}
+            {isCollapsed ? null : <>
             <div className="rounded-xl border border-line overflow-hidden mb-3">
               {sorted.map((m, idx) => {
                 const prevGroup = idx > 0 ? sorted[idx - 1].g : null;
@@ -323,6 +348,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
                 </div>
               ))}
             </div>
+            </>}
           </section>
         );
       })}
