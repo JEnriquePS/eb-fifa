@@ -80,27 +80,6 @@ function AppShell({ user, signOut }) {
                 <span className="text-outline text-3xl sm:text-5xl align-baseline">2026</span>
               </span>
             </h1>
-            {/* Usuario activo */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="text-right">
-                <p className="font-cond font-semibold text-chalk text-sm">{data.me?.name ?? "—"}</p>
-                {data.me?.is_admin && (
-                  <span className="font-cond text-[10px] uppercase tracking-wider text-amber">Admin</span>
-                )}
-              </div>
-              <button
-                onClick={signOut}
-                title="Salir"
-                aria-label="Salir"
-                className="cursor-pointer text-mist hover:text-card transition-colors duration-150 focus:outline-none"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-              </button>
-            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -139,21 +118,38 @@ function AppShell({ user, signOut }) {
         className="sticky top-0 z-20 border-b border-line bg-night/92 backdrop-blur-md"
         aria-label="Secciones"
       >
-        <div className="mx-auto flex max-w-7xl gap-0.5 overflow-x-auto px-4">
-          {tabs.map((t) => (
+        <div className="mx-auto flex max-w-7xl items-center px-4">
+          <div className="flex gap-0.5 overflow-x-auto flex-1">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                aria-current={tab === t.id ? "page" : undefined}
+                className={`shrink-0 cursor-pointer border-b-2 px-3 sm:px-4 py-3 font-cond font-bold uppercase tracking-[0.15em] text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
+                  tab === t.id
+                    ? "border-gold text-gold"
+                    : "border-transparent text-mist hover:text-chalk"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="shrink-0 flex items-center gap-2 pl-4 border-l border-line ml-2 py-2">
+            <span className="font-cond text-sm font-semibold text-chalk hidden sm:block">{data.me?.name ?? "—"}</span>
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              aria-current={tab === t.id ? "page" : undefined}
-              className={`shrink-0 cursor-pointer border-b-2 px-3 sm:px-4 py-3 font-cond font-bold uppercase tracking-[0.15em] text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
-                tab === t.id
-                  ? "border-gold text-gold"
-                  : "border-transparent text-mist hover:text-chalk"
-              }`}
+              onClick={signOut}
+              title="Salir"
+              aria-label="Salir"
+              className="cursor-pointer text-mist hover:text-gold transition-colors duration-150 focus:outline-none"
             >
-              {t.label}
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
             </button>
-          ))}
+          </div>
         </div>
       </nav>
 
