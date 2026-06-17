@@ -11,9 +11,9 @@ import ResultsView from "./features/results/ResultsView";
 import LeaderboardView from "./features/leaderboard/LeaderboardView";
 import RulesView from "./features/rules/RulesView";
 
-const TABS = [
+const ALL_TABS = [
   { id: "groups", label: "Grupos" },
-  { id: "results", label: "Resultados" },
+  { id: "results", label: "Resultados", adminOnly: true },
   { id: "table", label: "Tabla" },
   { id: "rules", label: "Cómo Jugar" },
 ];
@@ -38,6 +38,8 @@ function AppShell({ user, signOut }) {
     () => buildContext(data.results.groupScores, data.results.koPicks),
     [data.results]
   );
+
+  const tabs = ALL_TABS.filter((t) => !t.adminOnly || data.me?.is_admin);
 
   const predicted = countPredicted(data.myGroupScores);
   const champion = koWinner(104, ctx);
@@ -137,7 +139,7 @@ function AppShell({ user, signOut }) {
         aria-label="Secciones"
       >
         <div className="mx-auto flex max-w-7xl gap-0.5 overflow-x-auto px-4">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
