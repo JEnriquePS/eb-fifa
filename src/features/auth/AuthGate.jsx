@@ -16,7 +16,7 @@ function Logo() {
         <span className="text-gold">MUNDIALISTA</span>
       </h1>
       <p className="mt-1 font-cond text-mist text-sm tracking-wide">
-        Copa Mundial FIFA 2026 · hora peruana 🇵🇪
+        Copa Mundial FIFA 2026
       </p>
       {/* Sponsor */}
       <div className="mt-5 flex items-end justify-center gap-3">

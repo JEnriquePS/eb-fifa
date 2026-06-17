@@ -131,7 +131,7 @@ export default function FixtureView({ ctx, groupScores, results }) {
           </button>
         ))}
         <span className="ml-auto font-cond text-xs uppercase tracking-widest text-mist">
-          Horarios en hora peruana 🇵🇪 (UTC-5)
+          Horarios en hora Lima (UTC-5)
         </span>
       </div>
 

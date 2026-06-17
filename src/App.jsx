@@ -4,6 +4,7 @@ import { usePollaData } from "./core/hooks/usePollaData";
 import { buildContext, pendingMatchesProgress, koWinner } from "./lib/polla";
 import { scorePlayer } from "./lib/scoring";
 import { Trophy, Award, LogOut } from "lucide-react";
+import { TimezoneContext, useTimezoneState } from "./core/hooks/useTimezone";
 
 const PODIUM_ICONS = [
   <Trophy className="w-4 h-4 text-gold" />,
@@ -35,6 +36,7 @@ const SYNC_LABELS = {
 
 function AppShell({ user, signOut }) {
   const [tab, setTab] = useState("groups");
+  const { tz, setTz } = useTimezoneState();
   const data = usePollaData(user);
 
   const ctx = useMemo(
@@ -83,6 +85,7 @@ function AppShell({ user, signOut }) {
   }
 
   return (
+    <TimezoneContext.Provider value={tz}>
     <div className="min-h-screen">
       {/* ── Header ── */}
       <header className="relative overflow-hidden border-b border-line">
@@ -181,7 +184,7 @@ function AppShell({ user, signOut }) {
       {/* ── Contenido ── */}
       <main className="mx-auto max-w-7xl px-4 py-7">
         {tab === "groups" && (
-          <GroupsView ctx={ctx} resultsCtx={resultsCtx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} />
+          <GroupsView ctx={ctx} resultsCtx={resultsCtx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} onTzChange={setTz} />
         )}
         {tab === "bracket" && (
           <BracketView ctx={ctx} onPick={data.onPick} />
@@ -213,10 +216,11 @@ function AppShell({ user, signOut }) {
 
       <footer className="border-t border-line py-5">
         <p className="text-center font-cond text-xs uppercase tracking-widest text-mist">
-          Calendario oficial FIFA · Horarios en hora de Lima (UTC-5) · {data.players.length} jugador{data.players.length !== 1 ? "es" : ""} en la quiniela
+          Calendario oficial FIFA · {data.players.length} jugador{data.players.length !== 1 ? "es" : ""} en la quiniela
         </p>
       </footer>
     </div>
+    </TimezoneContext.Provider>
   );
 }
 

@@ -1,4 +1,5 @@
 import { TEAMS } from "../data/teams";
+import { useTimezone, convertTime, TIMEZONES } from "../hooks/useTimezone";
 
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -24,14 +25,18 @@ export function Flag({ code, className = "text-2xl" }) {
   );
 }
 
-export function TimeChip({ time, className = "" }) {
+export function TimeChip({ date, time, className = "" }) {
+  const tz = useTimezone();
+  const tzInfo = TIMEZONES.find((t) => t.tz === tz) ?? TIMEZONES[0];
+  const display = date ? convertTime(date, time, tz) : time;
+
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full bg-panel-2 border border-line px-2 py-0.5 font-cond font-semibold text-grass tabular-nums tracking-wide ${className}`}
-      title="Hora peruana (Lima, UTC-5)"
+      title={`Hora ${tzInfo.label} (${tzInfo.offset})`}
     >
-      <span role="img" aria-label="Perú" className="text-[0.85em]">🇵🇪</span>
-      {time}
+      <span className="text-[0.85em]">{tzInfo.flag}</span>
+      {display}
     </span>
   );
 }

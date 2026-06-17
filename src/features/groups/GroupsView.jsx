@@ -2,6 +2,7 @@ import { useMemo, useRef, useEffect, useState, Fragment } from "react";
 import { GROUPS, TEAMS } from "../../core/data/teams";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { Flag, ScoreInput, TimeChip, formatDate, todayISO } from "../../core/ui/atoms";
+import { useTimezone, TIMEZONES } from "../../core/hooks/useTimezone";
 
 // Returns true if the match kickoff has already passed (Lima time = UTC-5)
 function isMatchLocked(match) {
@@ -94,7 +95,7 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
   if (hideDate) {
     return (
       <div className={`py-2 flex items-center gap-3 ${dimmed ? "opacity-50" : ""}`}>
-        <TimeChip time={match.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
+        <TimeChip date={match.date} time={match.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
         <div className="flex-1 min-w-0">{teamRow("sm")}</div>
         <div className="text-right hidden sm:flex sm:flex-col sm:items-end w-[130px] shrink-0">
           <p className="font-cond text-xs text-mist leading-tight truncate">{match.stadium}</p>
@@ -110,7 +111,7 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
       {teamRow("base")}
       <div className="mt-1 flex items-center justify-center gap-2 text-[11px] text-mist">
         <span>{formatDate(match.date)}</span>
-        <TimeChip time={match.time} className="text-[11px]" />
+        <TimeChip date={match.date} time={match.time} className="text-[11px]" />
         <span className="truncate hidden sm:inline">{match.stadium}</span>
       </div>
     </div>
@@ -371,8 +372,10 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
   );
 }
 
-export default function GroupsView({ ctx, resultsCtx, scores, results, onScore }) {
+export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, onTzChange }) {
   const [mode, setMode] = useState("date");
+  const tz = useTimezone();
+  const tzInfo = TIMEZONES.find((t) => t.tz === tz) ?? TIMEZONES[0];
   useKickoffTimer();
 
   return (
@@ -394,9 +397,18 @@ export default function GroupsView({ ctx, resultsCtx, scores, results, onScore }
             {m.label}
           </button>
         ))}
-        <span className="ml-auto font-cond text-xs uppercase tracking-widest text-mist">
-          Horarios en hora peruana 🇵🇪 (UTC-5)
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="font-cond text-xs uppercase tracking-widest text-mist hidden sm:block">Hora</span>
+          <select
+            value={tz}
+            onChange={(e) => onTzChange?.(e.target.value)}
+            className="cursor-pointer rounded-md border border-line bg-panel px-2 py-1 font-cond text-xs text-chalk focus:outline-none focus-visible:ring-2 focus-visible:ring-grass"
+          >
+            {TIMEZONES.map((t) => (
+              <option key={t.tz} value={t.tz}>{t.flag} {t.label} ({t.offset})</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} />}
