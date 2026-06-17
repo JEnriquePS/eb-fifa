@@ -20,7 +20,7 @@ function Logo() {
       {/* Sponsor */}
       <div className="mt-5 flex items-center justify-center gap-3">
         <span className="font-cond text-[10px] uppercase tracking-widest text-mist">Presentado por</span>
-        <img src="/images/eb-logo-w.png" alt="EB Consulting" className="h-6 object-contain" />
+        <img src={`${import.meta.env.BASE_URL}images/eb-logo-w.png`} alt="EB Consulting" className="h-6 object-contain" />
       </div>
     </div>
   );
@@ -74,7 +74,7 @@ function LoginScreen() {
     <div
       className="min-h-screen flex items-center justify-center px-4 relative"
       style={{
-        backgroundImage: "url('/images/fondo-industria.png')",
+        backgroundImage: `url('${import.meta.env.BASE_URL}images/fondo-industria.png')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -180,7 +180,7 @@ function LoginScreen() {
 
         {/* Badge cliente */}
         <div className="mt-6 flex justify-center">
-          <img src="/images/DF-BREWERY.png" alt="DF Brewery — Automation Specialist" className="h-16 object-contain opacity-60" />
+          <img src={`${import.meta.env.BASE_URL}images/DF-BREWERY.png`} alt="DF Brewery — Automation Specialist" className="h-16 object-contain opacity-60" />
         </div>
       </div>
     </div>
