@@ -217,7 +217,7 @@ function NameSetup({ user, onDone }) {
     e.preventDefault();
     if (!name.trim()) return;
     setLoading(true);
-    const { error } = await db.upsertProfile(user.id, name.trim());
+    const { error } = await db.upsertProfile(user.id, name.trim(), user.email);
     if (error) { setError(error.message); setLoading(false); return; }
     onDone();
   };
@@ -278,7 +278,12 @@ export default function AuthGate({ user, authLoading, children }) {
     if (!user) { setChecking(false); return; }
     setChecking(true);
     db.getProfile(user.id).then((p) => {
-      setProfile(p ?? null);
+      if (p && !p.email && user.email) {
+        db.upsertProfile(user.id, p.name, user.email);
+        setProfile({ ...p, email: user.email });
+      } else {
+        setProfile(p ?? null);
+      }
       setChecking(false);
     });
   }, [user?.id]);
