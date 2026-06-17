@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import { useAuth } from "./core/hooks/useAuth";
 import { usePollaData } from "./core/hooks/usePollaData";
 import { buildContext, pendingMatchesProgress, koWinner } from "./lib/polla";
+import { scorePlayer } from "./lib/scoring";
+
+const PODIUM_MEDALS = ["🥇", "🥈", "🥉"];
 import { TEAMS } from "./core/data/teams";
 import { Flag } from "./core/ui/atoms";
 import AuthGate from "./features/auth/AuthGate";
@@ -40,6 +43,16 @@ function AppShell({ user, signOut }) {
   );
 
   const tabs = ALL_TABS.filter((t) => !t.adminOnly || data.me?.is_admin);
+
+  const top3 = useMemo(() => {
+    return data.players
+      .map((p) => {
+        const polla = data.allPollas[p.id] ?? { groupScores: {}, koPicks: {} };
+        return { ...p, ...scorePlayer(polla, resultsCtx, data.results) };
+      })
+      .sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name))
+      .slice(0, 3);
+  }, [data.players, data.allPollas, resultsCtx, data.results]);
 
   const today = new Date().toISOString().slice(0, 10);
   const { predicted, total: pendingTotal } = pendingMatchesProgress(data.myGroupScores, today);
@@ -80,6 +93,17 @@ function AppShell({ user, signOut }) {
                 <span className="text-outline text-3xl sm:text-5xl align-baseline">2026</span>
               </span>
             </h1>
+            {top3.length > 0 && top3[0].total > 0 && (
+              <div className="shrink-0 flex flex-col gap-1 text-right">
+                {top3.map((p, i) => (
+                  <div key={p.id} className="flex items-center gap-1.5 justify-end">
+                    <span className="font-cond text-sm font-semibold text-chalk">{p.name}</span>
+                    <span className="font-display text-sm text-gold tabular-nums">{p.total}</span>
+                    <span className="text-base">{PODIUM_MEDALS[i]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
