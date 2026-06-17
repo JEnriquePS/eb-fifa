@@ -147,9 +147,7 @@ function AppShell({ user, signOut }) {
               aria-current={tab === t.id ? "page" : undefined}
               className={`shrink-0 cursor-pointer border-b-2 px-3 sm:px-4 py-3 font-cond font-bold uppercase tracking-[0.15em] text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
                 tab === t.id
-                  ? t.id === "results"
-                    ? "border-card text-card"
-                    : "border-grass text-grass"
+                  ? "border-gold text-gold"
                   : "border-transparent text-mist hover:text-chalk"
               }`}
             >

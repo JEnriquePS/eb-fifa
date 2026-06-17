@@ -184,10 +184,10 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
 
   return (
     <div>
-      <div className="mb-5 rounded-lg border border-card/50 bg-card/10 px-4 py-3 flex items-start gap-3">
+      <div className="mb-5 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex items-start gap-3">
         <span className="text-xl mt-0.5" role="img" aria-label="Llave">🔑</span>
         <div className="flex-1">
-          <p className="font-cond font-bold uppercase tracking-wider text-card text-sm">Modo Admin — Resultados Oficiales</p>
+          <p className="font-cond font-bold uppercase tracking-wider text-gold text-sm">Modo Admin — Resultados Oficiales</p>
           <p className="font-cond text-sm text-chalk mt-0.5">
             Los cambios que hagas aquí se reflejan en tiempo real en la tabla de posiciones de todos los jugadores.
           </p>
@@ -195,14 +195,14 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
         <button
           onClick={handleSync}
           disabled={syncing}
-          className="shrink-0 cursor-pointer rounded-lg border border-card/50 bg-card/10 hover:bg-card/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-card transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-card"
+          className="shrink-0 cursor-pointer rounded-lg border border-gold/50 bg-gold/10 hover:bg-gold/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-gold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           {syncing ? "Sincronizando…" : "↻ Sincronizar"}
         </button>
       </div>
 
       {syncMsg && (
-        <div className={`mb-5 rounded-lg border px-4 py-2.5 font-cond text-sm ${syncMsg.ok ? "border-grass/40 bg-grass/10 text-grass" : "border-card/40 bg-card/10 text-card"}`}>
+        <div className={`mb-5 rounded-lg border px-4 py-2.5 font-cond text-sm ${syncMsg.ok ? "border-grass/40 bg-grass/10 text-grass" : "border-gold/40 bg-gold/10 text-gold"}`}>
           {syncMsg.text}
         </div>
       )}
@@ -215,8 +215,8 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
           <button
             key={s.id}
             onClick={() => setSub(s.id)}
-            className={`cursor-pointer border-b-2 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-card focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
-              sub === s.id ? "border-card text-card" : "border-transparent text-mist hover:text-chalk"
+            className={`cursor-pointer border-b-2 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
+              sub === s.id ? "border-gold text-gold" : "border-transparent text-mist hover:text-chalk"
             }`}
           >
             {s.label}
