@@ -29,7 +29,7 @@ function Logo() {
 
 function LoginScreen() {
   const alreadyRegistered = localStorage.getItem("eb_registered") === "true";
-  const [step, setStep] = useState("auth");
+  const [step, setStep] = useState(alreadyRegistered ? "auth" : "code");
   const [mode, setMode] = useState("login");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
@@ -42,9 +42,9 @@ function LoginScreen() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.rpc("check_access_code", { p_code: code.trim() });
+    const { data } = await supabase.rpc("check_access_code", { p_code: code.trim() });
     setLoading(false);
-    if (error || !data) {
+    if (!data) {
       setError("Código incorrecto.");
     } else {
       setStep("auth");
@@ -57,6 +57,12 @@ function LoginScreen() {
     setError(null);
 
     if (mode === "register") {
+      const { data: validCode } = await supabase.rpc("check_access_code", { p_code: code.trim() });
+      if (!validCode) {
+        setError("Código de acceso incorrecto.");
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.signUp({ email: email.trim(), password });
       if (error) {
         if (error.message.toLowerCase().includes("already registered")) {
