@@ -27,8 +27,9 @@ function Logo() {
 }
 
 function LoginScreen() {
+  const alreadyRegistered = localStorage.getItem("eb_registered") === "true";
   const [step, setStep] = useState("code"); // "code" | "auth"
-  const [mode, setMode] = useState("register"); // "register" | "login"
+  const [mode, setMode] = useState(alreadyRegistered ? "login" : "register");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,6 +63,8 @@ function LoginScreen() {
         } else {
           setError(error.message);
         }
+      } else {
+        localStorage.setItem("eb_registered", "true");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
@@ -110,6 +113,13 @@ function LoginScreen() {
                   Continuar
                 </button>
               </form>
+              <button
+                type="button"
+                onClick={() => { setStep("auth"); setMode("login"); setError(null); }}
+                className="mt-4 w-full cursor-pointer font-cond text-xs uppercase tracking-widest text-mist hover:text-chalk text-center"
+              >
+                ¿Ya tienes cuenta? Iniciar sesión →
+              </button>
             </>
           ) : (
             <>
