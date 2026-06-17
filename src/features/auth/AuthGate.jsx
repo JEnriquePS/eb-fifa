@@ -276,6 +276,7 @@ export default function AuthGate({ user, authLoading, children }) {
 
   useEffect(() => {
     if (!user) { setChecking(false); return; }
+    setChecking(true);
     db.getProfile(user.id).then((p) => {
       setProfile(p ?? null);
       setChecking(false);
