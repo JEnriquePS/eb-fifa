@@ -99,7 +99,7 @@ function LoginScreen() {
                   required
                   autoFocus
                   autoComplete="off"
-                  placeholder="Ej: EB2026"
+                  placeholder="Ingresa el código aquí"
                   value={code}
                   onChange={(e) => { setCode(e.target.value); setError(null); }}
                   className={INPUT_CLS}
