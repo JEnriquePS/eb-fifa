@@ -18,9 +18,9 @@ function Logo() {
         Copa Mundial FIFA 2026 · hora peruana 🇵🇪
       </p>
       {/* Sponsor */}
-      <div className="mt-5 flex items-baseline justify-center gap-3">
+      <div className="mt-5 flex items-end justify-center gap-3">
         <span className="font-cond text-sm uppercase tracking-widest text-mist">Presentado por</span>
-        <img src={`${import.meta.env.BASE_URL}images/eb-logo-w.png`} alt="EB Consulting" className="h-10 object-contain" style={{ marginTop: "6px" }} />
+        <img src={`${import.meta.env.BASE_URL}images/eb-logo-w.png`} alt="EB Consulting" className="h-10 object-contain" />
       </div>
     </div>
   );
