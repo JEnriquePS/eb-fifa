@@ -125,9 +125,7 @@ export default function LeaderboardView({
               <th className="py-3 text-center font-semibold" title="Resultado 1X2 acertado · 1 pt">
                 Acertados
               </th>
-              <th className="py-3 text-center font-semibold" title="Aciertos en la llave (ver detalle abajo)">
-                Llave
-              </th>
+
               <th className="py-3 text-center font-semibold">Campeón</th>
               <th className="py-3 pr-4 text-right font-semibold">Total</th>
             </tr>
@@ -170,10 +168,7 @@ export default function LeaderboardView({
                   <span className="ml-0.5 font-cond text-[11px] text-mist">×3</span>
                 </td>
                 <td className="py-3 text-center text-chalk">{p.outcome}</td>
-                <td className="py-3 text-center">
-                  <span className="font-semibold text-chalk">{p.koPts}</span>
-                  <span className="ml-1 font-cond text-[11px] text-mist">({p.koHits}✓)</span>
-                </td>
+
                 <td className="py-3 text-center">
                   {p.champion ? (
                     <span className="inline-flex items-center gap-1.5" title={TEAMS[p.champion]?.name}>
@@ -192,7 +187,7 @@ export default function LeaderboardView({
             ))}
             {ranking.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-10 text-center font-cond text-mist">
+                <td colSpan={6} className="py-10 text-center font-cond text-mist">
                   Aún no hay jugadores registrados
                 </td>
               </tr>
