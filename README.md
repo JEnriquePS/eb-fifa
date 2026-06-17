@@ -1,6 +1,6 @@
-# La Polla Mundialista 2026
+# La Quiniela Mundialista 2026
 
-Polla futbolera para la Copa Mundial FIFA 2026 — pronostica los 104 partidos, arma tu bracket eliminatorio y compite contra tus compañeros en tiempo real.
+Quiniela futbolera para la Copa Mundial FIFA 2026 — pronostica los 104 partidos, arma tu bracket eliminatorio y compite contra tus compañeros en tiempo real.
 
 **App:** https://jenriqueps.github.io/eb-fifa
 

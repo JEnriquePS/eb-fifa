@@ -9,7 +9,7 @@ graph TB
     jugador(["👤 Jugador\nIngresa pronósticos\ny sigue el ranking"])
     admin(["👤 Admin / Organizador\nIngresa resultados\noficiales"])
 
-    subgraph sistema["La Polla Mundialista 2026"]
+    subgraph sistema["La Quiniela Mundialista 2026"]
         app["⚽ App Web\nSPA React"]
     end
 

@@ -1,5 +1,5 @@
 -- ============================================================
---  POLLA MUNDIALISTA 2026  –  Schema Supabase
+--  QUINIELA MUNDIALISTA 2026  –  Schema Supabase
 --  Ejecutar en: Supabase Dashboard → SQL Editor → Run
 -- ============================================================
 

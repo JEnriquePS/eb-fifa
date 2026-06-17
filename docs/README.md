@@ -1,4 +1,4 @@
-# Documentación — La Polla Mundialista 2026
+# Documentación — La Quiniela Mundialista 2026
 
 Índice de toda la documentación del proyecto.
 

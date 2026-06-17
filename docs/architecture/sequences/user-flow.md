@@ -55,7 +55,7 @@ sequenceDiagram
     U->>App: Ingresa correo y envía
     App->>SB: signInWithOtp(email)
     SB->>Email: Envía magic link
-    Email-->>U: Correo con botón "Entrar a la polla"
+    Email-->>U: Correo con botón "Entrar a la quiniela"
 
     U->>App: Clic en magic link
     App->>SB: Procesa token del link
