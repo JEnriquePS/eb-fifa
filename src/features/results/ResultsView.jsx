@@ -63,30 +63,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick }
         </div>
       )}
 
-      <div className="mb-5 flex border-b border-line">
-        {[
-          { id: "groups", label: "Fase de Grupos" },
-          { id: "bracket", label: "Llave Real" },
-        ].map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setSub(s.id)}
-            className={`cursor-pointer border-b-2 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-card focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
-              sub === s.id
-                ? "border-card text-card"
-                : "border-transparent text-mist hover:text-chalk"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {sub === "groups" ? (
-        <GroupsView ctx={resultsCtx} scores={results.groupScores} onScore={onScore} />
-      ) : (
-        <BracketView ctx={resultsCtx} onPick={onPick} />
-      )}
+      <GroupsView ctx={resultsCtx} scores={results.groupScores} onScore={onScore} />
     </div>
   );
 }

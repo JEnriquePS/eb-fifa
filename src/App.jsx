@@ -13,7 +13,6 @@ import RulesView from "./features/rules/RulesView";
 
 const TABS = [
   { id: "groups", label: "Grupos" },
-  { id: "bracket", label: "La Llave" },
   { id: "results", label: "Resultados" },
   { id: "table", label: "Tabla" },
   { id: "rules", label: "Cómo Jugar" },
