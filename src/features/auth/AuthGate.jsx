@@ -20,7 +20,7 @@ function Logo() {
       {/* Sponsor */}
       <div className="mt-5 flex items-baseline justify-center gap-3">
         <span className="font-cond text-sm uppercase tracking-widest text-mist">Presentado por</span>
-        <img src={`${import.meta.env.BASE_URL}images/eb-logo-w.png`} alt="EB Consulting" className="h-10 object-contain translate-y-2" />
+        <img src={`${import.meta.env.BASE_URL}images/eb-logo-w.png`} alt="EB Consulting" className="h-10 object-contain" style={{ marginTop: "6px" }} />
       </div>
     </div>
   );
