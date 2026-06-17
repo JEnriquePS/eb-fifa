@@ -29,8 +29,8 @@ function Logo() {
 
 function LoginScreen() {
   const alreadyRegistered = localStorage.getItem("eb_registered") === "true";
-  const [step, setStep] = useState("code"); // "code" | "auth"
-  const [mode, setMode] = useState(alreadyRegistered ? "login" : "register");
+  const [step, setStep] = useState("auth");
+  const [mode, setMode] = useState("login");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,15 +38,16 @@ function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const ACCESS_CODE = import.meta.env.VITE_ACCESS_CODE;
-
-  const validateCode = (e) => {
+  const validateCode = async (e) => {
     e.preventDefault();
-    if (code.trim().toUpperCase() === ACCESS_CODE?.toUpperCase()) {
-      setError(null);
-      setStep("auth");
-    } else {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await supabase.rpc("check_access_code", { p_code: code.trim() });
+    setLoading(false);
+    if (error || !data) {
       setError("Código incorrecto.");
+    } else {
+      setStep("auth");
     }
   };
 
@@ -110,8 +111,8 @@ function LoginScreen() {
                   className={INPUT_CLS}
                 />
                 {error && <p className="font-cond text-xs text-card" role="alert">{error}</p>}
-                <button type="submit" disabled={!code.trim()} className={BTN_CLS}>
-                  Continuar
+                <button type="submit" disabled={loading || !code.trim()} className={BTN_CLS}>
+                  {loading ? "Verificando…" : "Continuar"}
                 </button>
               </form>
               <button
@@ -188,7 +189,7 @@ function LoginScreen() {
               <button
                 type="button"
                 onClick={() => { setStep("code"); setCode(""); setError(null); }}
-                className="mt-4 w-full cursor-pointer font-cond text-xs uppercase tracking-widest text-mist hover:text-chalk text-center"
+                className="mt-3 w-full cursor-pointer rounded-md border border-gold/40 bg-gold/10 hover:bg-gold/20 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm text-gold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
               >
                 ← Cambiar código
               </button>
