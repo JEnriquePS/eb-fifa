@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RefreshCw } from "lucide-react";
 import * as XLSX from "xlsx";
 import GroupsView from "../groups/GroupsView";
 import { syncResultsFromAPI } from "../../lib/sync";
@@ -184,21 +185,27 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
 
   return (
     <div>
-      <div className="mb-5 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex items-start gap-3">
+      <div className="mb-5 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex flex-wrap items-start gap-4">
         <span className="text-xl mt-0.5" role="img" aria-label="Llave">🔑</span>
-        <div className="flex-1">
+        <div className="flex-1 min-w-[200px]">
           <p className="font-cond font-bold uppercase tracking-wider text-gold text-sm">Modo Admin — Resultados Oficiales</p>
           <p className="font-cond text-sm text-chalk mt-0.5">
             Los cambios que hagas aquí se reflejan en tiempo real en la tabla de posiciones de todos los jugadores.
           </p>
         </div>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="shrink-0 cursor-pointer rounded-lg border border-gold/50 bg-gold/10 hover:bg-gold/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-gold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          {syncing ? "Sincronizando…" : "↻ Sincronizar"}
-        </button>
+        <div className="flex flex-col items-end gap-1.5">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="shrink-0 cursor-pointer rounded-lg border border-gold/50 bg-gold/10 hover:bg-gold/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-gold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-gold flex items-center gap-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Sincronizando…" : "Sincronizar"}
+          </button>
+          <p className="font-cond text-[11px] text-mist/70 text-right max-w-[200px]">
+            Importa marcadores finales desde football-data.org
+          </p>
+        </div>
       </div>
 
       {syncMsg && (
