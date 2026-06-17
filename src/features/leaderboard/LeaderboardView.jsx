@@ -148,16 +148,21 @@ export default function LeaderboardView({
                   )}
                 </td>
                 <td className="py-3">
-                  <span className="font-cond font-semibold text-base text-chalk">{p.name}</span>
-                  {p.id === activeId && (
-                    <span className="ml-2 rounded-full border border-grass/40 px-1.5 py-px font-cond text-[10px] uppercase tracking-wider text-grass">
-                      tú
-                    </span>
-                  )}
-                  {p.is_admin && (
-                    <span className="ml-1 rounded-full border border-amber/40 px-1.5 py-px font-cond text-[10px] uppercase tracking-wider text-amber">
-                      admin
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-cond font-semibold text-base text-chalk">{p.name}</span>
+                    {p.id === activeId && (
+                      <span className="rounded-full border border-grass/40 px-1.5 py-px font-cond text-[10px] uppercase tracking-wider text-grass">
+                        tú
+                      </span>
+                    )}
+                    {p.is_admin && (
+                      <span className="rounded-full border border-amber/40 px-1.5 py-px font-cond text-[10px] uppercase tracking-wider text-amber">
+                        admin
+                      </span>
+                    )}
+                  </div>
+                  {p.email && (
+                    <div className="font-cond text-xs text-mist/70 mt-0.5">{p.email}</div>
                   )}
                 </td>
                 <td className="py-3 text-center">

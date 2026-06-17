@@ -20,7 +20,7 @@ export const supabase = createClient(url, key, {
 export const db = {
   async fetchAll() {
     const [p, gp, kp, rg, rk] = await Promise.all([
-      supabase.from("profiles").select("id, name, is_admin, created_at").order("created_at"),
+      supabase.from("profiles").select("id, name, email, is_admin, created_at").order("created_at"),
       supabase.from("predictions_group").select("user_id, match_id, home_score, away_score"),
       supabase.from("predictions_ko").select("user_id, match_id, winner_code"),
       supabase.from("results_group").select("match_id, home_score, away_score"),
@@ -44,10 +44,10 @@ export const db = {
     return data;
   },
 
-  async upsertProfile(userId, name) {
+  async upsertProfile(userId, name, email) {
     return supabase
       .from("profiles")
-      .upsert({ id: userId, name }, { onConflict: "id" });
+      .upsert({ id: userId, name, ...(email ? { email } : {}) }, { onConflict: "id" });
   },
 
   async upsertGroupPred(userId, matchId, homeScore, awayScore) {
