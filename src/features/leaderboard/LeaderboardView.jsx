@@ -1,10 +1,15 @@
 import { useMemo, useState } from "react";
+import { Trophy, Award, Crown } from "lucide-react";
 import { TEAMS } from "../../core/data/teams";
 import { Flag } from "../../core/ui/atoms";
 import { scorePlayer, resultsProgress, KO_POINTS } from "../../lib/scoring";
 import { buildContext, koWinner, pendingMatchesProgress } from "../../lib/polla";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDALS = [
+  <Trophy className="w-5 h-5 text-gold" />,
+  <Award className="w-5 h-5 text-mist" />,
+  <Award className="w-5 h-5 text-amber" />,
+];
 
 function Delta({ prev, curr }) {
   if (prev === undefined || prev === curr) return null;
@@ -86,7 +91,7 @@ export default function LeaderboardView({
       {/* Líder */}
       {hasResults && leader && leader.total > 0 && (
         <div className="rise mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-gold/40 bg-panel px-5 py-4 shadow-md">
-          <span className="text-5xl trophy-shine" role="img" aria-label="Líder">👑</span>
+          <Crown className="w-10 h-10 text-gold trophy-shine" />
           <div>
             <p className="font-cond text-xs uppercase tracking-[0.25em] text-gold/80">Va ganando</p>
             <p className="font-display text-2xl text-gold">{leader.name}</p>
@@ -146,7 +151,7 @@ export default function LeaderboardView({
               >
                 <td className="py-3 pl-4">
                   {i < 3 && hasResults && p.total > 0 ? (
-                    <span className="text-lg" role="img" aria-label={`Puesto ${i + 1}`}>{MEDALS[i]}</span>
+                    MEDALS[i]
                   ) : (
                     <span className="font-cond font-bold text-mist">{i + 1}</span>
                   )}

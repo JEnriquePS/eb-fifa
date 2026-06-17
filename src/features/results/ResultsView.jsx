@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Lock, KeyRound } from "lucide-react";
 import * as XLSX from "xlsx";
 import GroupsView from "../groups/GroupsView";
 import { syncResultsFromAPI } from "../../lib/sync";
@@ -156,7 +156,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
   if (!me?.is_admin) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <span className="text-5xl" role="img" aria-label="Candado">🔒</span>
+        <Lock className="w-12 h-12 text-mist/50" />
         <h2 className="font-display text-xl text-chalk">Solo el organizador puede ingresar resultados</h2>
         <p className="font-cond text-sm text-mist max-w-sm leading-relaxed">
           Cuando el admin ingrese los marcadores reales, la tabla de posiciones se actualizará en tiempo real
@@ -186,7 +186,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
   return (
     <div>
       <div className="mb-5 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex flex-wrap items-start gap-4">
-        <span className="text-xl mt-0.5" role="img" aria-label="Llave">🔑</span>
+        <KeyRound className="w-5 h-5 mt-0.5 text-gold shrink-0" />
         <div className="flex-1 min-w-[200px]">
           <p className="font-cond font-bold uppercase tracking-wider text-gold text-sm">Modo Admin — Resultados Oficiales</p>
           <p className="font-cond text-sm text-chalk mt-0.5">

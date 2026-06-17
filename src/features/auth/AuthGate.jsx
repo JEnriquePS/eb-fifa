@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Trophy } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 
 const INPUT_CLS =
@@ -226,7 +227,7 @@ function NameSetup({ user, onDone }) {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-6xl" role="img" aria-label="Trofeo">🏆</span>
+          <Trophy className="w-14 h-14 text-gold mx-auto" />
           <h1 className="mt-4 font-display text-2xl text-chalk">¡Bienvenido!</h1>
           <p className="mt-1 font-cond text-mist text-sm">
             ¿Cómo vas a aparecer en la tabla?

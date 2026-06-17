@@ -3,8 +3,13 @@ import { useAuth } from "./core/hooks/useAuth";
 import { usePollaData } from "./core/hooks/usePollaData";
 import { buildContext, pendingMatchesProgress, koWinner } from "./lib/polla";
 import { scorePlayer } from "./lib/scoring";
+import { Trophy, Award, LogOut } from "lucide-react";
 
-const PODIUM_MEDALS = ["🥇", "🥈", "🥉"];
+const PODIUM_ICONS = [
+  <Trophy className="w-4 h-4 text-gold" />,
+  <Award className="w-4 h-4 text-mist" />,
+  <Award className="w-4 h-4 text-amber" />,
+];
 import { TEAMS } from "./core/data/teams";
 import { Flag } from "./core/ui/atoms";
 import AuthGate from "./features/auth/AuthGate";
@@ -99,7 +104,7 @@ function AppShell({ user, signOut }) {
                   <div key={p.id} className="flex items-center gap-1.5 justify-end">
                     <span className="font-cond text-sm font-semibold text-chalk">{p.name}</span>
                     <span className="font-display text-sm text-gold tabular-nums">{p.total}</span>
-                    <span className="text-base">{PODIUM_MEDALS[i]}</span>
+                    {PODIUM_ICONS[i]}
                   </div>
                 ))}
               </div>
@@ -167,11 +172,7 @@ function AppShell({ user, signOut }) {
               aria-label="Salir"
               className="cursor-pointer text-mist hover:text-gold transition-colors duration-150 focus:outline-none"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>

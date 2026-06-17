@@ -9,6 +9,21 @@ function isMatchLocked(match) {
   return Date.now() >= kickoff.getTime();
 }
 
+// Forces a re-render exactly when the next upcoming match kicks off
+function useKickoffTimer() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const next = GROUP_MATCHES
+      .map((m) => new Date(`${m.date}T${m.time}:00-05:00`).getTime())
+      .filter((t) => t > Date.now())
+      .sort((a, b) => a - b)[0];
+    if (!next) return;
+    const delay = next - Date.now() + 500; // +500ms de margen
+    const id = setTimeout(() => setTick((n) => n + 1), delay);
+    return () => clearTimeout(id);
+  });
+}
+
 
 function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
@@ -358,6 +373,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
 
 export default function GroupsView({ ctx, resultsCtx, scores, results, onScore }) {
   const [mode, setMode] = useState("date");
+  useKickoffTimer();
 
   return (
     <div>

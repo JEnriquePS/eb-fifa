@@ -1,3 +1,4 @@
+import { Trophy, Check } from "lucide-react";
 import { GROUPS, TEAMS } from "../../core/data/teams";
 import { KO_BY_ID, ROUND_LABELS } from "../../core/data/knockoutMatches";
 import { resolveKoMatch, koWinner, slotLabel } from "../../lib/polla";
@@ -28,9 +29,7 @@ function TeamButton({ code, placeholder, picked, eliminated, onClick, disabled }
             {TEAMS[code].name}
           </span>
           {picked && (
-            <svg viewBox="0 0 20 20" fill="currentColor" className="ml-auto w-4 h-4 text-gold shrink-0" aria-label="Ganador">
-              <path fillRule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clipRule="evenodd" />
-            </svg>
+            <Check className="ml-auto w-4 h-4 text-gold shrink-0" />
           )}
         </>
       ) : (
@@ -105,9 +104,7 @@ function Podium({ ctx }) {
 
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-gold/40 bg-panel px-5 py-4 text-center shadow-md">
-      <span className={`text-5xl ${champion ? "trophy-shine" : "opacity-30"}`} role="img" aria-label="Trofeo">
-        🏆
-      </span>
+      <Trophy className={`w-12 h-12 text-gold ${champion ? "trophy-shine" : "opacity-30"}`} />
       {champion ? (
         <>
           <div className="flex items-center gap-2">
