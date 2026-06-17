@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { TEAMS } from "../../core/data/teams";
 import { Flag } from "../../core/ui/atoms";
 import { scorePlayer, resultsProgress, KO_POINTS } from "../../lib/scoring";
-import { buildContext, koWinner } from "../../lib/polla";
+import { buildContext, koWinner, pendingMatchesProgress } from "../../lib/polla";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -27,14 +27,19 @@ export default function LeaderboardView({
 }) {
   const [prev] = useState({}); // snapshot anterior para deltas (solo visual)
 
+  const today = new Date().toISOString().slice(0, 10);
+
   const ranking = useMemo(() => {
     return players
       .map((p) => {
         const polla = allPollas[p.id] ?? { groupScores: {}, koPicks: {} };
+        const { predicted, total: pendingTotal } = pendingMatchesProgress(polla.groupScores, today);
         return {
           ...p,
           ...scorePlayer(polla, resultsCtx, results),
           champion: koWinner(104, buildContext(polla.groupScores, polla.koPicks)),
+          pendingPredicted: predicted,
+          pendingTotal,
         };
       })
       .sort(
@@ -126,6 +131,7 @@ export default function LeaderboardView({
                 Acertados
               </th>
 
+              <th className="py-3 text-center font-semibold" title="Partidos pendientes pronosticados">Pronóst.</th>
               <th className="py-3 text-center font-semibold">Campeón</th>
               <th className="py-3 pr-4 text-right font-semibold">Total</th>
             </tr>
@@ -169,6 +175,12 @@ export default function LeaderboardView({
                 </td>
                 <td className="py-3 text-center text-chalk">{p.outcome}</td>
 
+                <td className="py-3 text-center tabular-nums">
+                  <span className={p.pendingPredicted === p.pendingTotal ? "text-grass font-semibold" : "text-mist"}>
+                    {p.pendingPredicted}
+                  </span>
+                  <span className="text-mist/50">/{p.pendingTotal}</span>
+                </td>
                 <td className="py-3 text-center">
                   {p.champion ? (
                     <span className="inline-flex items-center gap-1.5" title={TEAMS[p.champion]?.name}>
@@ -187,7 +199,7 @@ export default function LeaderboardView({
             ))}
             {ranking.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-10 text-center font-cond text-mist">
+                <td colSpan={7} className="py-10 text-center font-cond text-mist">
                   Aún no hay jugadores registrados
                 </td>
               </tr>

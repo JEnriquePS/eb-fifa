@@ -174,6 +174,8 @@ function AppShell({ user, signOut }) {
             results={data.results}
             onScore={data.onResultScore}
             onPick={data.onResultPick}
+            players={data.players}
+            allPollas={data.allPollas}
           />
         )}
         {tab === "table" && (
