@@ -32,6 +32,7 @@ function LoginScreen() {
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -144,15 +145,25 @@ function LoginScreen() {
                   onChange={(e) => setEmail(e.target.value)}
                   className={INPUT_CLS}
                 />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Contraseña (mínimo 6 caracteres)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={INPUT_CLS}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    placeholder="Contraseña (mínimo 6 caracteres)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={INPUT_CLS}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer font-cond text-xs uppercase tracking-wider text-mist hover:text-chalk transition-colors duration-150"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? "Ocultar" : "Ver"}
+                  </button>
+                </div>
                 {error && <p className="font-cond text-xs text-card" role="alert">{error}</p>}
                 <button type="submit" disabled={loading || !email.trim() || !password} className={BTN_CLS}>
                   {loading
