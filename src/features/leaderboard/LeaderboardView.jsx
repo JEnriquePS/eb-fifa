@@ -4,6 +4,7 @@ import { TEAMS } from "../../core/data/teams";
 import { Flag } from "../../core/ui/atoms";
 import { scorePlayer, resultsProgress, KO_POINTS } from "../../lib/scoring";
 import { buildContext, koWinner, pendingMatchesProgress } from "../../lib/polla";
+import { LeaderboardShareButton } from "./LeaderboardShareCard";
 
 const MEDALS = [
   <Trophy className="w-5 h-5 text-gold" />,
@@ -66,6 +67,7 @@ export default function LeaderboardView({
     <div>
       {/* Estado real-time */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
+        <LeaderboardShareButton ranking={ranking} />
         <span
           className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-cond text-xs font-semibold uppercase tracking-wider ${
             connected
