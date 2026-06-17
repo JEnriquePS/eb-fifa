@@ -56,7 +56,7 @@ function AppShell({ user, signOut }) {
           >
             ⚽
           </span>
-          <p className="mt-4 font-cond uppercase tracking-widest text-mist text-sm">Cargando polla…</p>
+          <p className="mt-4 font-cond uppercase tracking-widest text-mist text-sm">Cargando quiniela…</p>
         </div>
       </div>
     );
@@ -72,7 +72,7 @@ function AppShell({ user, signOut }) {
           </p>
           <div className="flex items-end justify-between gap-4 mt-2">
             <h1 className="font-display leading-none">
-              <span className="block text-2xl sm:text-4xl text-chalk">LA POLLA</span>
+              <span className="block text-2xl sm:text-4xl text-chalk">LA QUINIELA</span>
               <span className="block text-2xl sm:text-4xl">
                 <span className="text-gold">MUNDIALISTA</span>{" "}
                 <span className="text-outline text-3xl sm:text-5xl align-baseline">2026</span>
@@ -182,7 +182,7 @@ function AppShell({ user, signOut }) {
 
       <footer className="border-t border-line py-5">
         <p className="text-center font-cond text-xs uppercase tracking-widest text-mist">
-          Calendario oficial FIFA · Horarios en hora de Lima (UTC-5) · {data.players.length} jugador{data.players.length !== 1 ? "es" : ""} en la polla
+          Calendario oficial FIFA · Horarios en hora de Lima (UTC-5) · {data.players.length} jugador{data.players.length !== 1 ? "es" : ""} en la quiniela
         </p>
       </footer>
     </div>

@@ -71,7 +71,7 @@ function FixtureRow({ entry, ctx, groupScores, results }) {
                 {score[0]} – {score[1]}
               </span>
               <span className="block font-cond text-[9px] uppercase tracking-widest text-mist leading-none">
-                {isOfficial ? "oficial" : "tu polla"}
+                {isOfficial ? "oficial" : "tu pronóstico"}
               </span>
             </>
           ) : (

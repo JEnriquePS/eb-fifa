@@ -27,7 +27,7 @@ function LoginScreen() {
         <div className="text-center mb-8">
           <span className="text-7xl" role="img" aria-label="Balón">⚽</span>
           <h1 className="mt-4 font-display text-3xl">
-            <span className="text-chalk">LA POLLA</span>{" "}
+            <span className="text-chalk">LA QUINIELA</span>{" "}
             <span className="text-gold">MUNDIALISTA</span>
           </h1>
           <p className="mt-1 font-cond text-mist text-sm tracking-wide">
@@ -53,7 +53,7 @@ function LoginScreen() {
             </div>
           ) : (
             <>
-              <h2 className="font-display text-lg text-chalk mb-1">Entrar a la polla</h2>
+              <h2 className="font-display text-lg text-chalk mb-1">Entrar a la quiniela</h2>
               <p className="font-cond text-sm text-mist mb-5">
                 Ingresa tu correo y te enviamos un link mágico — sin contraseña.
               </p>
@@ -132,7 +132,7 @@ function NameSetup({ user, onDone }) {
               disabled={loading || !name.trim()}
               className="w-full cursor-pointer rounded-md bg-grass px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-night transition-opacity duration-150 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
             >
-              {loading ? "Guardando…" : "Entrar a la polla →"}
+              {loading ? "Guardando…" : "Entrar a la quiniela →"}
             </button>
           </form>
         </div>

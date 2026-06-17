@@ -46,7 +46,7 @@ function ExampleMatch({ home, away, homeScore, awayScore, prediction, result }) 
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="flex items-center gap-2">
-          <span className="font-cond text-mist text-[11px] uppercase tracking-wider w-16">Tu polla</span>
+          <span className="font-cond text-mist text-[11px] uppercase tracking-wider w-16">Tu pronóstico</span>
           <span className="font-cond font-bold tabular-nums">{prediction[0]} – {prediction[1]}</span>
         </div>
         <div className="flex items-center gap-2">
