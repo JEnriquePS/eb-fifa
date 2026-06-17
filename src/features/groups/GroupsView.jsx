@@ -57,7 +57,7 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   );
 }
 
-function MatchRow({ match, score, result, onScore, hideDate = false }) {
+function MatchRow({ match, score, result, onScore, hideDate = false, action }) {
   const locked = isMatchLocked(match);
 
   const set = (idx, v) => {
@@ -97,10 +97,14 @@ function MatchRow({ match, score, result, onScore, hideDate = false }) {
       <div className={`py-2 flex items-center gap-3 ${dimmed ? "opacity-50" : ""}`}>
         <TimeChip date={match.date} time={match.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
         <div className="flex-1 min-w-0">{teamRow("sm")}</div>
-        <div className="text-right hidden sm:flex sm:flex-col sm:items-end w-[130px] shrink-0">
-          <p className="font-cond text-xs text-mist leading-tight truncate">{match.stadium}</p>
-          <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60 truncate">{match.city}</p>
-        </div>
+        {action ? (
+          <div className="shrink-0">{action}</div>
+        ) : (
+          <div className="text-right hidden sm:flex sm:flex-col sm:items-end w-[130px] shrink-0">
+            <p className="font-cond text-xs text-mist leading-tight truncate">{match.stadium}</p>
+            <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60 truncate">{match.city}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -244,7 +248,7 @@ function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index }) 
   );
 }
 
-function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
+function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions }) {
   const today = todayISO();
   const focusRef = useRef(null);
   const [collapsed, setCollapsed] = useState(() => new Set());
@@ -282,7 +286,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
   useEffect(() => {
     const t = setTimeout(() => {
       focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
+    }, 300);
     return () => clearTimeout(t);
   }, []);
 
@@ -349,7 +353,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
                       </div>
                     )}
                     <div className={`bg-panel px-4 ${isLast ? "" : "border-b border-line/40"}`}>
-                      <MatchRow match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate />
+                      <MatchRow match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate action={matchActions?.[m.m]} />
                     </div>
                   </Fragment>
                 );
@@ -372,7 +376,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx }) {
   );
 }
 
-export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, onTzChange }) {
+export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, onTzChange, matchActions }) {
   const [mode, setMode] = useState("date");
   const tz = useTimezone();
   const tzInfo = TIMEZONES.find((t) => t.tz === tz) ?? TIMEZONES[0];
@@ -411,7 +415,7 @@ export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, 
         </div>
       </div>
 
-      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} />}
+      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} matchActions={matchActions} />}
 
       {mode === "group" && (
         <>

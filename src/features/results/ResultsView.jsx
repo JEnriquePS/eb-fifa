@@ -5,6 +5,8 @@ import GroupsView from "../groups/GroupsView";
 import { syncResultsFromAPI } from "../../lib/sync";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { validScore } from "../../lib/polla";
+import { TEAMS } from "../../core/data/teams";
+import { MatchShareButton } from "./MatchShareCard";
 
 function formatDate(d) {
   const [, m, day] = d.split("-");
@@ -47,7 +49,8 @@ function downloadGlobalExcel(players, allPollas, results) {
 }
 
 
-function PlayerPredictionsView({ players, allPollas, results }) {
+
+function PlayerPredictionsView({ players, allPollas, results, baseUrl }) {
   const [selectedId, setSelectedId] = useState(players[0]?.id ?? "");
 
   const selectedPlayer = players.find((p) => p.id === selectedId) ?? players[0];
@@ -110,9 +113,15 @@ function PlayerPredictionsView({ players, allPollas, results }) {
                       return (
                         <tr key={m.m} className="border-b border-line/40 last:border-b-0 bg-panel">
                           <td className="py-2.5 px-3 font-cond text-xs text-mist">
-                            <span className="font-semibold text-chalk">{m.h}</span>
-                            <span className="mx-1 text-mist/50">vs</span>
-                            <span className="font-semibold text-chalk">{m.a}</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-base leading-none">{TEAMS[m.h]?.flag}</span>
+                              <span className="font-semibold text-chalk">{m.h}</span>
+                            </span>
+                            <span className="mx-1.5 text-mist/50">vs</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-base leading-none">{TEAMS[m.a]?.flag}</span>
+                              <span className="font-semibold text-chalk">{m.a}</span>
+                            </span>
                             <span className="ml-2 text-mist/50">{m.time}</span>
                           </td>
                           <td className="py-2.5 px-3 text-center font-cond">
@@ -232,9 +241,26 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
       </div>
 
       {sub === "results" ? (
-        <GroupsView ctx={resultsCtx} scores={results.groupScores} onScore={onScore} />
+        <GroupsView
+          ctx={resultsCtx}
+          scores={results.groupScores}
+          onScore={onScore}
+          matchActions={Object.fromEntries(
+            GROUP_MATCHES.map((m) => [
+              m.m,
+              <MatchShareButton
+                key={m.m}
+                match={m}
+                players={players ?? []}
+                allPollas={allPollas ?? {}}
+                results={results}
+                baseUrl={import.meta.env.BASE_URL}
+              />,
+            ])
+          )}
+        />
       ) : (
-        <PlayerPredictionsView players={players ?? []} allPollas={allPollas ?? {}} results={results} />
+        <PlayerPredictionsView players={players ?? []} allPollas={allPollas ?? {}} results={results} baseUrl={import.meta.env.BASE_URL} />
       )}
     </div>
   );
