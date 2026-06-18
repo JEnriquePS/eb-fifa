@@ -71,7 +71,7 @@ function ShareCard({ cardRef, ranking }) {
             background: PODIUM_BG[0],
             border: `1px solid ${PODIUM_BORDER[0]}`,
             borderRadius: 10, marginBottom: 8,
-            boxShadow: "0 0 10px rgba(240,192,64,0.35), 0 0 24px rgba(240,192,64,0.15)",
+            filter: "drop-shadow(0 0 8px rgba(240,192,64,0.4)) drop-shadow(0 0 20px rgba(240,192,64,0.18))",
             overflow: "hidden",
           }}>
             {g1.players.map((p, i) => (
