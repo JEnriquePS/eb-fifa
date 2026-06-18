@@ -5,6 +5,7 @@ import { Flag } from "../../core/ui/atoms";
 import { scorePlayer, resultsProgress, KO_POINTS } from "../../lib/scoring";
 import { buildContext, koWinner, pendingMatchesProgress } from "../../lib/polla";
 import { LeaderboardShareButton } from "./LeaderboardShareCard";
+import { ScoreEvolutionChart } from "./ScoreEvolutionChart";
 
 const MEDALS = [
   <Trophy className="w-5 h-5 text-gold" />,
@@ -214,6 +215,9 @@ export default function LeaderboardView({
           </tbody>
         </table>
       </div>
+
+      {/* Evolución de puntos */}
+      <ScoreEvolutionChart players={players} allPollas={allPollas} results={results} />
 
       {/* Pie con regla de puntaje */}
       <div className="mt-4 flex flex-wrap items-start gap-x-5 gap-y-2 font-cond text-xs uppercase tracking-wider text-mist">
