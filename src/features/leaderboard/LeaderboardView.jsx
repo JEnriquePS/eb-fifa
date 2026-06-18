@@ -6,6 +6,7 @@ import { scorePlayer, resultsProgress, KO_POINTS } from "../../lib/scoring";
 import { buildContext, koWinner, pendingMatchesProgress } from "../../lib/polla";
 import { LeaderboardShareButton } from "./LeaderboardShareCard";
 import { ScoreEvolutionChart } from "./ScoreEvolutionChart";
+import { PlayerProfileModal } from "./PlayerProfileModal";
 
 const MEDALS = [
   <Trophy className="w-5 h-5 text-gold" />,
@@ -33,6 +34,7 @@ export default function LeaderboardView({
   lastUpdated,
 }) {
   const [prev] = useState({}); // snapshot anterior para deltas (solo visual)
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -161,7 +163,12 @@ export default function LeaderboardView({
                 </td>
                 <td className="py-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-cond font-semibold text-base text-chalk">{p.name}</span>
+                    <button
+                      onClick={() => setSelectedPlayer({ player: p, rank: i + 1 })}
+                      className="cursor-pointer font-cond font-semibold text-base text-chalk hover:text-gold transition-colors duration-150 focus:outline-none focus-visible:underline text-left"
+                    >
+                      {p.name}
+                    </button>
                     {p.id === activeId && (
                       <span className="rounded-full border border-grass/40 px-1.5 py-px font-cond text-[10px] uppercase tracking-wider text-grass">
                         tú
@@ -218,6 +225,17 @@ export default function LeaderboardView({
 
       {/* Evolución de puntos */}
       <ScoreEvolutionChart players={players} allPollas={allPollas} results={results} />
+
+      {/* Perfil de jugador */}
+      {selectedPlayer && (
+        <PlayerProfileModal
+          player={selectedPlayer.player}
+          rank={selectedPlayer.rank}
+          allPollas={allPollas}
+          results={results}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
 
       {/* Pie con regla de puntaje */}
       <div className="mt-4 flex flex-wrap items-start gap-x-5 gap-y-2 font-cond text-xs uppercase tracking-wider text-mist">
