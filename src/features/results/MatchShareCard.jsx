@@ -1,7 +1,7 @@
 import { toPng } from "html-to-image";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Share2, X, Download } from "lucide-react";
+import { Share2, X, Download, Copy, Check } from "lucide-react";
 import { TEAMS } from "../../core/data/teams";
 import { validScore } from "../../lib/polla";
 
@@ -20,7 +20,7 @@ function ShareCard({ cardRef, match, players, allPollas, results, baseUrl }) {
     <div
       ref={cardRef}
       style={{
-        width: 480,
+        width: 360,
         background: "#0d1f0f",
         borderRadius: 16,
         overflow: "hidden",
@@ -37,12 +37,26 @@ function ShareCard({ cardRef, match, players, allPollas, results, baseUrl }) {
       <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 22 }}>{TEAMS[match.h]?.flag}</div>
+            <div style={{ width: 40, height: 27, overflow: "hidden", borderRadius: 3, display: "inline-block" }}>
+              <img
+                src={`${baseUrl}images/flags/${TEAMS[match.h]?.iso2}.png`}
+                alt={match.h}
+                style={{ width: 40, height: 27, objectFit: "cover", display: "block" }}
+                crossOrigin="anonymous"
+              />
+            </div>
             <div style={{ color: "#e8ede8", fontSize: 13, fontWeight: "bold", marginTop: 4 }}>{match.h}</div>
           </div>
           <div style={{ color: "#8fa88f", fontSize: 13, fontWeight: "bold", padding: "0 8px" }}>vs</div>
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 22 }}>{TEAMS[match.a]?.flag}</div>
+            <div style={{ width: 40, height: 27, overflow: "hidden", borderRadius: 3, display: "inline-block" }}>
+              <img
+                src={`${baseUrl}images/flags/${TEAMS[match.a]?.iso2}.png`}
+                alt={match.a}
+                style={{ width: 40, height: 27, objectFit: "cover", display: "block" }}
+                crossOrigin="anonymous"
+              />
+            </div>
             <div style={{ color: "#e8ede8", fontSize: 13, fontWeight: "bold", marginTop: 4 }}>{match.a}</div>
           </div>
         </div>
@@ -100,19 +114,82 @@ function ShareCard({ cardRef, match, players, allPollas, results, baseUrl }) {
 export function MatchShareButton({ match, players, allPollas, results, baseUrl }) {
   const cardRef = useRef(null);
   const [preview, setPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  async function handleDownload() {
-    if (!cardRef.current) return;
+  const filename = `quiniela-${match.h}-vs-${match.a}.png`;
+
+  async function generatePng() {
+    if (!cardRef.current) return null;
+    return toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+  }
+
+  async function dataUrlToBlob(dataUrl) {
+    const res = await fetch(dataUrl);
+    return res.blob();
+  }
+
+  async function handleOpen() {
+    setPreview(true);
+    setGenerating(true);
     try {
-      const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `quiniela-${match.h}-vs-${match.a}.png`;
-      a.click();
+      const url = await generatePng();
+      setPreviewUrl(url);
     } catch (e) {
       console.error("Error generando imagen:", e);
+    } finally {
+      setGenerating(false);
     }
   }
+
+  function handleClose() {
+    setPreview(false);
+    setPreviewUrl(null);
+    setCopied(false);
+  }
+
+  async function handleShare() {
+    try {
+      const dataUrl = previewUrl ?? await generatePng();
+      if (!dataUrl) return;
+      const blob = await dataUrlToBlob(dataUrl);
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "La Quiniela Mundialista" });
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") console.error("Error compartiendo:", e);
+    }
+  }
+
+  async function handleCopy() {
+    try {
+      const dataUrl = previewUrl ?? await generatePng();
+      if (!dataUrl) return;
+      const blob = await dataUrlToBlob(dataUrl);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error("Error copiando imagen:", e);
+    }
+  }
+
+  async function handleDownload() {
+    try {
+      const dataUrl = previewUrl ?? await generatePng();
+      if (!dataUrl) return;
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = filename;
+      a.click();
+    } catch (e) {
+      console.error("Error descargando imagen:", e);
+    }
+  }
+
+  const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
   return (
     <>
@@ -129,7 +206,7 @@ export function MatchShareButton({ match, players, allPollas, results, baseUrl }
       </div>
 
       <button
-        onClick={() => setPreview(true)}
+        onClick={handleOpen}
         title="Ver y compartir pronósticos"
         className="cursor-pointer rounded-md border border-line bg-panel hover:bg-turf px-2 py-1 font-cond text-xs text-mist hover:text-chalk transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass inline-flex items-center gap-1"
       >
@@ -137,43 +214,70 @@ export function MatchShareButton({ match, players, allPollas, results, baseUrl }
         Compartir
       </button>
 
-      {/* Modal preview — portal para escapar de contenedores con opacity */}
       {preview && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 backdrop-blur-sm p-4"
-          onClick={() => setPreview(false)}
+          onClick={handleClose}
         >
           <div
-            className="relative max-h-[90vh] overflow-y-auto rounded-2xl"
+            className="relative rounded-2xl overflow-hidden"
+            style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-turf/95 backdrop-blur-sm px-4 py-2.5 rounded-t-2xl border-b border-line">
-              <span className="font-cond text-sm font-bold uppercase tracking-wider text-chalk">
-                {match.h} vs {match.a}
-              </span>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 bg-turf/95 backdrop-blur-sm px-4 py-2.5 border-b border-line">
               <div className="flex items-center gap-2">
+                {!generating && previewUrl && canShare && (
+                  <button
+                    onClick={handleShare}
+                    className="cursor-pointer rounded-lg border border-grass/50 bg-grass/10 hover:bg-grass/20 px-3 py-1.5 font-cond text-xs font-semibold uppercase tracking-wider text-grass transition-colors duration-150 inline-flex items-center gap-1.5 focus:outline-none"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    Compartir
+                  </button>
+                )}
+                {!generating && previewUrl && (
+                  <button
+                    onClick={handleCopy}
+                    className="cursor-pointer rounded-lg border border-line bg-panel hover:bg-turf px-3 py-1.5 font-cond text-xs font-semibold uppercase tracking-wider text-mist hover:text-chalk transition-colors duration-150 inline-flex items-center gap-1.5 focus:outline-none"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-grass" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? "Copiado" : "Copiar"}
+                  </button>
+                )}
+                {!generating && previewUrl && (
+                  <button
+                    onClick={handleDownload}
+                    className="cursor-pointer rounded-lg border border-line bg-panel hover:bg-turf px-3 py-1.5 font-cond text-xs font-semibold uppercase tracking-wider text-mist hover:text-chalk transition-colors duration-150 inline-flex items-center gap-1.5 focus:outline-none"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Descargar
+                  </button>
+                )}
                 <button
-                  onClick={handleDownload}
-                  className="cursor-pointer rounded-lg border border-grass/50 bg-grass/10 hover:bg-grass/20 px-3 py-1.5 font-cond text-xs font-semibold uppercase tracking-wider text-grass transition-colors duration-150 inline-flex items-center gap-1.5 focus:outline-none"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Descargar
-                </button>
-                <button
-                  onClick={() => setPreview(false)}
+                  onClick={handleClose}
                   className="cursor-pointer rounded-lg border border-line bg-panel hover:bg-turf p-1.5 text-mist hover:text-chalk transition-colors duration-150 focus:outline-none"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
-            <ShareCard
-              match={match}
-              players={players}
-              allPollas={allPollas}
-              results={results}
-              baseUrl={baseUrl}
-            />
+
+            {/* Preview */}
+            <div className="overflow-y-auto" style={{ flex: 1 }}>
+              {generating && (
+                <div className="flex items-center justify-center p-8 text-mist text-sm font-cond">
+                  Generando imagen...
+                </div>
+              )}
+              {!generating && previewUrl && (
+                <img
+                  src={previewUrl}
+                  alt="Preview de la imagen a compartir"
+                  style={{ display: "block", width: "100%", maxWidth: 360 }}
+                />
+              )}
+            </div>
           </div>
         </div>,
         document.body
