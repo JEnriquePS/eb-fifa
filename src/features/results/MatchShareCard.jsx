@@ -156,7 +156,11 @@ export function MatchShareButton({ match, players, allPollas, results, baseUrl }
       const blob = await dataUrlToBlob(dataUrl);
       const file = new File([blob], filename, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "La Quiniela Mundialista" });
+        await navigator.share({
+          files: [file],
+          title: "La Quiniela Mundialista 🏆",
+          text: `Pronósticos del grupo para ${match.h} vs ${match.a} 👀`,
+        });
       }
     } catch (e) {
       if (e.name !== "AbortError") console.error("Error compartiendo:", e);

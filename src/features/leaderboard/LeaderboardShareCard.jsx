@@ -182,7 +182,11 @@ export function LeaderboardShareButton({ ranking }) {
       const blob = await dataUrlToBlob(previewUrl ?? await generatePng());
       const file = new File([blob], "tabla-quiniela.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "La Quiniela Mundialista" });
+        await navigator.share({
+          files: [file],
+          title: "La Quiniela Mundialista 🏆",
+          text: "Así va la tabla de posiciones del grupo 👀",
+        });
       }
     } catch (e) {
       if (e.name !== "AbortError") console.error("Error compartiendo:", e);
