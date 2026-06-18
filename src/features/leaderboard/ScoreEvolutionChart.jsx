@@ -1,13 +1,4 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import ReactECharts from "echarts-for-react";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { validScore } from "../../lib/polla";
 
@@ -18,33 +9,9 @@ const PLAYER_COLORS = [
 ];
 
 function calcPts(pred, res) {
-  if (!validScore(res)) return 0;
-  if (!validScore(pred)) return 0;
+  if (!validScore(res) || !validScore(pred)) return 0;
   if (pred[0] === res[0] && pred[1] === res[1]) return 3;
   return Math.sign(pred[0] - pred[1]) === Math.sign(res[0] - res[1]) ? 1 : 0;
-}
-
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
-  const match = payload[0]?.payload?._match;
-  return (
-    <div style={{
-      background: "#0d1f0f", border: "1px solid rgba(255,255,255,0.12)",
-      borderRadius: 8, padding: "8px 12px", fontSize: 12, minWidth: 140,
-    }}>
-      <p style={{ color: "#8fa88f", fontSize: 10, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>
-        {match ? `${match.h} vs ${match.a}` : `Partido ${label}`}
-      </p>
-      {[...payload]
-        .sort((a, b) => b.value - a.value)
-        .map((e) => (
-          <p key={e.dataKey} style={{ color: e.color, margin: "2px 0" }}>
-            <span style={{ color: "#e8ede8" }}>{e.name}</span>
-            <span style={{ float: "right", marginLeft: 16, fontWeight: "bold" }}>{e.value} pts</span>
-          </p>
-        ))}
-    </div>
-  );
 }
 
 export function ScoreEvolutionChart({ players, allPollas, results }) {
@@ -55,66 +22,104 @@ export function ScoreEvolutionChart({ players, allPollas, results }) {
 
   if (playedMatches.length === 0) return null;
 
-  // Build cumulative series
-  const cumulative = Object.fromEntries(activePlayers.map((p) => [p.id, 0]));
-  const chartData = playedMatches.map((match, idx) => {
-    const point = { x: idx + 1, _match: match };
-    activePlayers.forEach((p) => {
+  // x-axis labels
+  const xLabels = playedMatches.map((m) => `${m.h}–${m.a}`);
+
+  // one series per player
+  const series = activePlayers.map((player, idx) => {
+    let cumulative = 0;
+    const data = playedMatches.map((match) => {
       const res = results.groupScores?.[match.m];
-      const pred = allPollas[p.id]?.groupScores?.[match.m];
-      cumulative[p.id] += calcPts(pred, res);
-      point[p.id] = cumulative[p.id];
+      const pred = allPollas[player.id]?.groupScores?.[match.m];
+      cumulative += calcPts(pred, res);
+      return cumulative;
     });
-    return point;
+    return {
+      name: player.name,
+      type: "line",
+      data,
+      smooth: false,
+      symbol: "circle",
+      symbolSize: 5,
+      showSymbol: false,
+      emphasis: { focus: "series" },
+      lineStyle: { width: 2, color: PLAYER_COLORS[idx % PLAYER_COLORS.length] },
+      itemStyle: { color: PLAYER_COLORS[idx % PLAYER_COLORS.length] },
+    };
   });
 
+  const option = {
+    backgroundColor: "transparent",
+    animation: true,
+    grid: { top: 16, right: 16, bottom: 56, left: 36 },
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "#0d1f0f",
+      borderColor: "rgba(255,255,255,0.12)",
+      borderWidth: 1,
+      textStyle: { color: "#e8ede8", fontSize: 12, fontFamily: "inherit" },
+      formatter(params) {
+        const match = playedMatches[params[0].dataIndex];
+        const header = `<div style="color:#8fa88f;font-size:10px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">${match.h} vs ${match.a}</div>`;
+        const rows = [...params]
+          .sort((a, b) => b.value - a.value)
+          .map(
+            (p) =>
+              `<div style="display:flex;justify-content:space-between;gap:16px;margin:2px 0">` +
+              `<span style="color:${p.color}">● ${p.seriesName}</span>` +
+              `<strong style="color:#e8ede8">${p.value} pts</strong></div>`
+          )
+          .join("");
+        return `<div style="min-width:160px">${header}${rows}</div>`;
+      },
+    },
+    legend: {
+      bottom: 0,
+      type: "scroll",
+      textStyle: { color: "#e8ede8", fontSize: 11 },
+      pageTextStyle: { color: "#8fa88f" },
+      pageIconColor: "#8fa88f",
+      pageIconInactiveColor: "#4a5e4a",
+      inactiveColor: "#4a5e4a",
+    },
+    xAxis: {
+      type: "category",
+      data: xLabels,
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: "#8fa88f",
+        fontSize: 10,
+        interval: "auto",
+        rotate: playedMatches.length > 12 ? 35 : 0,
+        formatter: (val) => {
+          const [h, a] = val.split("–");
+          return `${h}`;
+        },
+      },
+      splitLine: { show: false },
+    },
+    yAxis: {
+      type: "value",
+      minInterval: 1,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: "#8fa88f", fontSize: 10 },
+      splitLine: { lineStyle: { color: "rgba(255,255,255,0.05)", type: "dashed" } },
+    },
+    series,
+  };
+
   return (
-    <div className="mt-6 rounded-xl border border-line bg-panel shadow-md p-4 pb-2">
-      <h3 className="font-cond text-xs font-bold uppercase tracking-widest text-mist mb-4">
+    <div className="mt-6 rounded-xl border border-line bg-panel shadow-md p-4 pb-3">
+      <p className="font-cond text-xs font-bold uppercase tracking-widest text-mist mb-3">
         Evolución de puntos · {playedMatches.length} partido{playedMatches.length !== 1 ? "s" : ""} jugados
-      </h3>
-      <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={chartData} margin={{ top: 4, right: 12, bottom: 0, left: -8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-          <XAxis
-            dataKey="x"
-            tick={{ fill: "#8fa88f", fontSize: 10 }}
-            tickLine={false}
-            axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
-            label={{ value: "Partido #", position: "insideBottomRight", offset: 0, fill: "#8fa88f", fontSize: 10 }}
-          />
-          <YAxis
-            tick={{ fill: "#8fa88f", fontSize: 10 }}
-            tickLine={false}
-            axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
-            width={28}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ paddingTop: 12 }}
-            formatter={(value) => {
-              const player = activePlayers.find((p) => p.id === value);
-              return (
-                <span style={{ color: "#e8ede8", fontSize: 11, fontFamily: "inherit" }}>
-                  {player?.name ?? value}
-                </span>
-              );
-            }}
-          />
-          {activePlayers.map((player, idx) => (
-            <Line
-              key={player.id}
-              type="monotone"
-              dataKey={player.id}
-              name={player.id}
-              stroke={PLAYER_COLORS[idx % PLAYER_COLORS.length]}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, strokeWidth: 0 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+      </p>
+      <ReactECharts
+        option={option}
+        style={{ height: 280 }}
+        opts={{ renderer: "canvas" }}
+      />
     </div>
   );
 }
