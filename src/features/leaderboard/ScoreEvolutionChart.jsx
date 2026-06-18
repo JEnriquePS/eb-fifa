@@ -9,9 +9,18 @@ import { validScore } from "../../lib/polla";
 echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 const PLAYER_COLORS = [
-  "#4caf50", "#f0c040", "#64b5f6", "#f06292",
-  "#ffb74d", "#ba68c8", "#4fc3f7", "#e57373",
-  "#aed581", "#ff8a65", "#81c784", "#90a4ae",
+  "#4caf50",  // green
+  "#f0c040",  // gold
+  "#f44336",  // red
+  "#2196f3",  // blue
+  "#ff9800",  // orange
+  "#e91e63",  // pink
+  "#00bcd4",  // cyan
+  "#9c27b0",  // purple
+  "#8bc34a",  // lime
+  "#00897b",  // teal
+  "#5c6bc0",  // indigo
+  "#ff7043",  // deep orange
 ];
 
 function calcPts(pred, res) {
