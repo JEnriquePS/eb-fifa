@@ -91,7 +91,7 @@ function AppShell({ user, signOut }) {
       <header className="relative overflow-hidden border-b border-line">
         <div className="mx-auto max-w-7xl px-4 pt-7 pb-5">
           <p className="font-cond text-xs font-semibold uppercase tracking-[0.3em] text-grass">
-            Copa Mundial FIFA · 🇺🇸 USA · 🇲🇽 México · 🇨🇦 Canadá · 11 jun – 19 jul 2026
+            Copa Mundial FIFA · <Flag code="USA" size={14} className="align-middle" /> USA · <Flag code="MEX" size={14} className="align-middle" /> México · <Flag code="CAN" size={14} className="align-middle" /> Canadá · 11 jun – 19 jul 2026
           </p>
           <div className="flex items-end justify-between gap-4 mt-2">
             <h1 className="font-display leading-none">
