@@ -124,7 +124,7 @@ function LoginScreen() {
               <button
                 type="button"
                 onClick={() => { setStep("auth"); setMode("login"); setError(null); }}
-                className="mt-4 w-full cursor-pointer font-cond text-xs uppercase tracking-widest text-mist hover:text-chalk text-center"
+                className="mt-3 w-full cursor-pointer rounded-md border border-grass/40 bg-grass/10 hover:bg-grass/20 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm text-grass transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
               >
                 ¿Ya tienes cuenta? Iniciar sesión →
               </button>
