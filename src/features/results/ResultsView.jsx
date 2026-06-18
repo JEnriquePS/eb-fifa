@@ -6,6 +6,7 @@ import { syncResultsFromAPI } from "../../lib/sync";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { validScore } from "../../lib/polla";
 import { TEAMS } from "../../core/data/teams";
+import { Flag } from "../../core/ui/atoms";
 import { MatchShareButton } from "./MatchShareCard";
 
 function formatDate(d) {
@@ -114,12 +115,12 @@ function PlayerPredictionsView({ players, allPollas, results, baseUrl }) {
                         <tr key={m.m} className="border-b border-line/40 last:border-b-0 bg-panel">
                           <td className="py-2.5 px-3 font-cond text-xs text-mist">
                             <span className="inline-flex items-center gap-1">
-                              <span className="text-base leading-none">{TEAMS[m.h]?.flag}</span>
+                              <Flag code={m.h} size={20} />
                               <span className="font-semibold text-chalk">{m.h}</span>
                             </span>
                             <span className="mx-1.5 text-mist/50">vs</span>
                             <span className="inline-flex items-center gap-1">
-                              <span className="text-base leading-none">{TEAMS[m.a]?.flag}</span>
+                              <Flag code={m.a} size={20} />
                               <span className="font-semibold text-chalk">{m.a}</span>
                             </span>
                             <span className="ml-2 text-mist/50">{m.time}</span>

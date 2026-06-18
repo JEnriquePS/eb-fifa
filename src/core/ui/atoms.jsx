@@ -16,12 +16,24 @@ export const todayISO = () => {
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
 };
 
-export function Flag({ code, className = "text-2xl" }) {
+const TEXT_SIZE_PX = {
+  "text-xs": 12, "text-sm": 14, "text-base": 16, "text-lg": 18,
+  "text-xl": 20, "text-2xl": 24, "text-3xl": 30, "text-4xl": 36,
+};
+
+export function Flag({ code, size, className = "" }) {
   const t = TEAMS[code];
+  const px = size ?? Object.entries(TEXT_SIZE_PX).find(([cls]) => className.includes(cls))?.[1] ?? 22;
+  const extraClass = className.replace(/\btext-\w+\b/g, "").trim();
+  if (!t?.iso2) return <span role="img" aria-label={code}>🏳️</span>;
+  const h = Math.round(px * 0.67);
   return (
-    <span className={`${className} leading-none select-none`} role="img" aria-label={t?.name ?? code}>
-      {t?.flag ?? "🏳️"}
-    </span>
+    <img
+      src={`${import.meta.env.BASE_URL}images/flags/${t.iso2}.png`}
+      alt={t.name}
+      style={{ width: px, height: h, objectFit: "cover", flexShrink: 0 }}
+      className={`inline-block rounded-sm select-none ${extraClass}`}
+    />
   );
 }
 
