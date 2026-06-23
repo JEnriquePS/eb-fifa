@@ -246,6 +246,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
           ctx={resultsCtx}
           scores={results.groupScores}
           onScore={onScore}
+          adminMode={true}
           matchActions={Object.fromEntries(
             GROUP_MATCHES.map((m) => [
               m.m,

@@ -44,7 +44,8 @@ function FixtureRow({ entry, ctx, groupScores, results }) {
   const valid = (s) => s && Number.isInteger(s[0]) && Number.isInteger(s[1]);
   const official = !isKO ? results?.groupScores[entry.m] : null;
   const isOfficial = valid(official);
-  const score = isOfficial ? official : !isKO ? groupScores[entry.m] : null;
+  const userScore = !isKO ? groupScores[entry.m] : null;
+  const score = isOfficial ? official : userScore;
   const hasScore = valid(score);
 
   return (
@@ -61,19 +62,30 @@ function FixtureRow({ entry, ctx, groupScores, results }) {
           <TeamCell code={home} placeholder={homePh} align="right" winner={winner ? winner === home : undefined} />
         </div>
         <div className="px-1 text-center">
-          {hasScore ? (
-            <>
-              <span
-                className={`font-cond font-bold text-lg tabular-nums whitespace-nowrap ${
-                  isOfficial ? "text-grass" : "text-gold"
-                }`}
-              >
-                {score[0]} – {score[1]}
-              </span>
-              <span className="block font-cond text-[9px] uppercase tracking-widest text-mist leading-none">
-                {isOfficial ? "oficial" : "tu pronóstico"}
-              </span>
-            </>
+          {isOfficial ? (
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1">
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+                  <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{official[0]}</span>
+                </div>
+                <span className="font-cond text-[9px] uppercase tracking-widest text-grass border border-grass/40 rounded px-1 py-0.5">FT</span>
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+                  <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{official[1]}</span>
+                </div>
+              </div>
+            </div>
+          ) : hasScore ? (
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-1">
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+                  <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[0]}</span>
+                </div>
+                <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+                  <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[1]}</span>
+                </div>
+              </div>
+            </div>
           ) : (
             <span className="text-mist font-cond">vs</span>
           )}
