@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, useState, Fragment } from "react";
+import { ChevronDown } from "lucide-react";
 import { GROUPS, TEAMS } from "../../core/data/teams";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { Flag, ScoreInput, TimeChip, formatDate, todayISO } from "../../core/ui/atoms";
@@ -8,6 +9,13 @@ import { useTimezone, TIMEZONES } from "../../core/hooks/useTimezone";
 function isMatchLocked(match) {
   const kickoff = new Date(`${match.date}T${match.time}:00-05:00`);
   return Date.now() >= kickoff.getTime();
+}
+
+// Returns true if the match is currently in progress (~110 min window after kickoff)
+function isMatchInProgress(match) {
+  const kickoff = new Date(`${match.date}T${match.time}:00-05:00`).getTime();
+  const elapsed = (Date.now() - kickoff) / 60000;
+  return elapsed >= 0 && elapsed < 110;
 }
 
 // Forces a re-render exactly when the next upcoming match kicks off
@@ -26,9 +34,77 @@ function useKickoffTimer() {
 }
 
 
-function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
+function ScoreCenter({ score, result, locked, inProgress, adminMode, set, homeLabel, awayLabel }) {
   const hasResult = result != null && result[0] != null && result[1] != null;
   const hasPrediction = score?.[0] != null && score?.[1] != null;
+
+  if (hasResult) {
+    const exactMatch = hasPrediction && score[0] === result[0] && score[1] === result[1];
+    const outcomeMatch = hasPrediction && Math.sign(score[0] - score[1]) === Math.sign(result[0] - result[1]);
+    const dotColor = exactMatch ? "bg-grass" : outcomeMatch ? "bg-gold" : "bg-red-400/80";
+
+    return (
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="flex items-center gap-1">
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{result[0]}</span>
+          </div>
+          <span className="font-cond text-[9px] uppercase tracking-widest text-grass border border-grass/40 rounded px-1 py-0.5">FT</span>
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{result[1]}</span>
+          </div>
+        </div>
+        {!adminMode && hasPrediction && (
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="font-cond text-sm font-semibold tabular-nums text-chalk">{score[0]}–{score[1]}</span>
+              <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+            </div>
+            <span className="font-cond text-[9px] text-mist/40 uppercase tracking-wider">Mi marcador</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (locked && inProgress) {
+    return (
+      <div className="flex flex-col items-center gap-1.5">
+        {hasPrediction && (
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-1">
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+                <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[0]}</span>
+              </div>
+              <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+                <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[1]}</span>
+              </div>
+            </div>
+            {!adminMode && <span className="font-cond text-[9px] text-mist/30 uppercase tracking-wider">Mi marcador</span>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (locked && hasPrediction) {
+    return (
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="flex items-center gap-1">
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[0]}</span>
+          </div>
+          <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[1]}</span>
+          </div>
+        </div>
+        {!adminMode && <span className="font-cond text-[9px] text-mist/30 uppercase tracking-wider">Mi marcador</span>}
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex flex-col items-center gap-0.5"
@@ -40,16 +116,8 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
         <span className="text-mist font-cond">–</span>
         <ScoreInput value={score?.[1]} onChange={(v) => set(1, v)} label={awayLabel} disabled={locked} />
       </div>
-      {/* Saved confirmation or official result */}
       <div className="h-4 flex items-center justify-center gap-1 leading-none">
-        {hasResult ? (
-          <>
-            <span className="font-cond text-[10px] text-mist/50 uppercase tracking-wider">res.</span>
-            <span className="font-cond text-[11px] font-bold text-grass tabular-nums">
-              {result[0]}–{result[1]}
-            </span>
-          </>
-        ) : hasPrediction && !locked ? (
+        {hasPrediction && !locked ? (
           <span className="font-cond text-[10px] text-grass/70">✓ guardado</span>
         ) : null}
       </div>
@@ -57,7 +125,7 @@ function ScoreCenter({ score, result, locked, set, homeLabel, awayLabel }) {
   );
 }
 
-function MatchRow({ match, score, result, onScore, hideDate = false, action }) {
+function MatchRow({ match, score, result, onScore, hideDate = false, action, adminMode }) {
   const locked = isMatchLocked(match);
 
   const set = (idx, v) => {
@@ -69,7 +137,10 @@ function MatchRow({ match, score, result, onScore, hideDate = false, action }) {
 
   const homeLabel = `Goles ${TEAMS[match.h].name}`;
   const awayLabel = `Goles ${TEAMS[match.a].name}`;
-  const dimmed = locked;
+  const hasResult = result != null && result[0] != null && result[1] != null;
+  const hasPrediction = score?.[0] != null && score?.[1] != null;
+  const inProgress = locked && !hasResult && isMatchInProgress(match);
+  const dimmed = locked && !hasResult && !hasPrediction && !inProgress;
 
   const teamRow = (size = "sm") => (
     <div
@@ -81,7 +152,7 @@ function MatchRow({ match, score, result, onScore, hideDate = false, action }) {
         </span>
         <Flag code={match.h} className="shrink-0 text-xl leading-none" />
       </div>
-      <ScoreCenter score={score} result={result} locked={locked} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
+      <ScoreCenter score={score} result={result} locked={locked} inProgress={inProgress} adminMode={adminMode} set={set} homeLabel={homeLabel} awayLabel={awayLabel} />
       <div className="flex items-center gap-1.5 min-w-0">
         <Flag code={match.a} className="shrink-0 text-xl leading-none" />
         <span className={`font-cond font-semibold text-${size} flex-1 min-w-0 truncate`} title={TEAMS[match.a].name}>
@@ -199,7 +270,7 @@ function StandingsCard({ group, ctx, resultsCtx }) {
 }
 
 // Group card for "Por Grupo" tab
-function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index }) {
+function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index, adminMode }) {
   const activeCtx = resultsCtx ?? ctx;
   const matches = GROUP_MATCHES.filter((m) => m.g === group).sort((a, b) => a.md - b.md || a.m - b.m);
   const complete = activeCtx.complete[group];
@@ -241,14 +312,14 @@ function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index }) 
 
       <div className="px-4 py-1 relative">
         {matches.map((match) => (
-          <MatchRow key={match.m} match={match} score={scores[match.m]} result={results?.[match.m]} onScore={onScore} />
+          <MatchRow key={match.m} match={match} score={scores[match.m]} result={results?.[match.m]} onScore={onScore} adminMode={adminMode} />
         ))}
       </div>
     </section>
   );
 }
 
-function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions }) {
+function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions, adminMode }) {
   const today = todayISO();
   const focusRef = useRef(null);
   const [collapsed, setCollapsed] = useState(() => new Set());
@@ -331,44 +402,53 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions })
               </span>
               <div className="chalk-rule flex-1" />
               {isPast && (
-                <span className="font-cond text-xs text-mist/60 ml-1">
-                  {isCollapsed ? "▶" : "▼"}
-                </span>
+                <ChevronDown
+                  className="w-4 h-4 text-mist/60 ml-1 shrink-0 transition-transform duration-300"
+                  style={{ transform: isCollapsed ? "rotate(90deg)" : "rotate(0deg)" }}
+                />
               )}
             </header>
 
             {/* All matches in one shared container so rows share the same width */}
-            {isCollapsed ? null : <>
-            <div className="rounded-xl border border-line overflow-hidden mb-3">
-              {sorted.map((m, idx) => {
-                const prevGroup = idx > 0 ? sorted[idx - 1].g : null;
-                const showHeader = multiGroup && m.g !== prevGroup;
-                const isLast = idx === sorted.length - 1;
-                return (
-                  <Fragment key={m.m}>
-                    {showHeader && (
-                      <div className={`flex items-center gap-2 px-4 py-1.5 bg-turf/60 border-b border-line/60 ${idx > 0 ? "border-t border-t-line/60" : ""}`}>
-                        <span className="font-cond text-[10px] uppercase tracking-widest text-mist/70">Grupo</span>
-                        <span className="font-display text-sm text-grass">{m.g}</span>
-                      </div>
-                    )}
-                    <div className={`bg-panel px-4 ${isLast ? "" : "border-b border-line/40"}`}>
-                      <MatchRow match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate action={matchActions?.[m.m]} />
-                    </div>
-                  </Fragment>
-                );
-              })}
-            </div>
-
-            {/* Standings */}
-            <div className="flex flex-wrap justify-center gap-2">
-              {groups.map((g) => (
-                <div key={g} className="flex-1 min-w-[175px] max-w-[280px]">
-                  <StandingsCard group={g} ctx={ctx} resultsCtx={resultsCtx} />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateRows: isCollapsed ? "0fr" : "1fr",
+                transition: "grid-template-rows 300ms ease",
+              }}
+            >
+              <div style={{ overflow: "hidden" }}>
+                <div className="rounded-xl border border-line overflow-hidden mb-3">
+                  {sorted.map((m, idx) => {
+                    const prevGroup = idx > 0 ? sorted[idx - 1].g : null;
+                    const showHeader = multiGroup && m.g !== prevGroup;
+                    const isLast = idx === sorted.length - 1;
+                    return (
+                      <Fragment key={m.m}>
+                        {showHeader && (
+                          <div className={`flex items-center gap-2 px-4 py-1.5 bg-turf/60 border-b border-line/60 ${idx > 0 ? "border-t border-t-line/60" : ""}`}>
+                            <span className="font-cond text-[10px] uppercase tracking-widest text-mist/70">Grupo</span>
+                            <span className="font-display text-sm text-grass">{m.g}</span>
+                          </div>
+                        )}
+                        <div className={`bg-panel px-4 ${isLast ? "" : "border-b border-line/40"}`}>
+                          <MatchRow match={m} score={scores[m.m]} result={results?.[m.m]} onScore={onScore} hideDate action={matchActions?.[m.m]} adminMode={adminMode} />
+                        </div>
+                      </Fragment>
+                    );
+                  })}
                 </div>
-              ))}
+
+                {/* Standings */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {groups.map((g) => (
+                    <div key={g} className="flex-1 min-w-[175px] max-w-[280px]">
+                      <StandingsCard group={g} ctx={ctx} resultsCtx={resultsCtx} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            </>}
           </section>
         );
       })}
@@ -376,7 +456,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions })
   );
 }
 
-export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, onTzChange, matchActions }) {
+export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, onTzChange, matchActions, adminMode }) {
   const [mode, setMode] = useState("date");
   const tz = useTimezone();
   const tzInfo = TIMEZONES.find((t) => t.tz === tz) ?? TIMEZONES[0];
@@ -415,7 +495,7 @@ export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, 
         </div>
       </div>
 
-      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} matchActions={matchActions} />}
+      {mode === "date" && <ByDateView scores={scores} results={results} onScore={onScore} ctx={ctx} resultsCtx={resultsCtx} matchActions={matchActions} adminMode={adminMode} />}
 
       {mode === "group" && (
         <>
@@ -432,7 +512,7 @@ export default function GroupsView({ ctx, resultsCtx, scores, results, onScore, 
           </div>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {Object.keys(GROUPS).map((g, i) => (
-              <GroupCard key={g} group={g} ctx={ctx} resultsCtx={resultsCtx} scores={scores} results={results} onScore={onScore} index={i} />
+              <GroupCard key={g} group={g} ctx={ctx} resultsCtx={resultsCtx} scores={scores} results={results} onScore={onScore} index={i} adminMode={adminMode} />
             ))}
           </div>
         </>
