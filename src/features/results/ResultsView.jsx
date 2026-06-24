@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RefreshCw, Lock, KeyRound } from "lucide-react";
 import * as XLSX from "xlsx";
 import GroupsView from "../groups/GroupsView";
+import R32AdminView from "./R32AdminView";
 import { syncResultsFromAPI } from "../../lib/sync";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { validScore } from "../../lib/polla";
@@ -158,8 +159,9 @@ function PlayerPredictionsView({ players, allPollas, results, baseUrl }) {
   );
 }
 
-export default function ResultsView({ me, resultsCtx, results, onScore, onPick, players, allPollas }) {
+export default function ResultsView({ me, resultsCtx, results, onScore, onPick, onResultKoScore, players, allPollas }) {
   const [sub, setSub] = useState("results");
+  const [resultPhase, setResultPhase] = useState("groups");
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
 
@@ -242,25 +244,52 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
       </div>
 
       {sub === "results" ? (
-        <GroupsView
-          ctx={resultsCtx}
-          scores={results.groupScores}
-          onScore={onScore}
-          adminMode={true}
-          matchActions={Object.fromEntries(
-            GROUP_MATCHES.map((m) => [
-              m.m,
-              <MatchShareButton
-                key={m.m}
-                match={m}
-                players={players ?? []}
-                allPollas={allPollas ?? {}}
-                results={results}
-                baseUrl={import.meta.env.BASE_URL}
-              />,
-            ])
+        <>
+          {/* Toggle Grupos / R32 */}
+          <div className="mb-5 flex gap-1 rounded-lg border border-line bg-turf/40 p-1 w-fit">
+            {[{ id: "groups", label: "Grupos" }, { id: "r32", label: "Dieciseisavos" }].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setResultPhase(t.id)}
+                className={`cursor-pointer rounded-md px-4 py-1.5 font-cond font-bold text-sm uppercase tracking-wider transition-colors duration-150 focus:outline-none ${
+                  resultPhase === t.id
+                    ? "bg-gold text-night"
+                    : "text-mist hover:text-chalk"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {resultPhase === "groups" ? (
+            <GroupsView
+              ctx={resultsCtx}
+              scores={results.groupScores}
+              onScore={onScore}
+              adminMode={true}
+              matchActions={Object.fromEntries(
+                GROUP_MATCHES.map((m) => [
+                  m.m,
+                  <MatchShareButton
+                    key={m.m}
+                    match={m}
+                    players={players ?? []}
+                    allPollas={allPollas ?? {}}
+                    results={results}
+                    baseUrl={import.meta.env.BASE_URL}
+                  />,
+                ])
+              )}
+            />
+          ) : (
+            <R32AdminView
+              resultsCtx={resultsCtx}
+              koScores={results.koScores ?? {}}
+              onResultKoScore={onResultKoScore}
+            />
           )}
-        />
+        </>
       ) : (
         <PlayerPredictionsView players={players ?? []} allPollas={allPollas ?? {}} results={results} baseUrl={import.meta.env.BASE_URL} />
       )}
