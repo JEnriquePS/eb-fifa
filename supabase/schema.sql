@@ -28,6 +28,12 @@ create table if not exists public.predictions_ko (
   user_id     uuid    references auth.users(id) on delete cascade not null,
   match_id    integer not null check (match_id between 73 and 104),
   winner_code text    not null,
+  rt_home     integer check (rt_home >= 0),
+  rt_away     integer check (rt_away >= 0),
+  et_home     integer check (et_home >= 0),
+  et_away     integer check (et_away >= 0),
+  pen_home    integer check (pen_home >= 0),
+  pen_away    integer check (pen_away >= 0),
   unique (user_id, match_id)
 );
 
@@ -42,7 +48,22 @@ create table if not exists public.results_group (
 create table if not exists public.results_ko (
   match_id    integer primary key check (match_id between 73 and 104),
   winner_code text    not null,
+  rt_home     integer check (rt_home >= 0),
+  rt_away     integer check (rt_away >= 0),
+  et_home     integer check (et_home >= 0),
+  et_away     integer check (et_away >= 0),
+  pen_home    integer check (pen_home >= 0),
+  pen_away    integer check (pen_away >= 0),
   updated_at  timestamptz default now()
+);
+
+-- Desempates de grupos (admin decide cuando H2H no resuelve)
+create table if not exists public.group_tiebreakers (
+  group_code  text    not null check (group_code in ('A','B','C','D','E','F','G','H','I','J','K','L')),
+  position    integer not null check (position between 1 and 4),
+  team_code   text    not null,
+  updated_at  timestamptz default now(),
+  primary key (group_code, position)
 );
 
 -- ── Row Level Security ───────────────────────────────────────
@@ -52,6 +73,7 @@ alter table public.predictions_group enable row level security;
 alter table public.predictions_ko    enable row level security;
 alter table public.results_group     enable row level security;
 alter table public.results_ko        enable row level security;
+alter table public.group_tiebreakers enable row level security;
 
 -- profiles: todos leen, cada usuario escribe el suyo
 create policy "profiles_select" on public.profiles
@@ -89,10 +111,18 @@ create policy "results_group_write" on public.results_group
     (select is_admin from public.profiles where id = auth.uid())
   );
 
--- results_ko
+-- results_ko: todos leen, solo admin escribe
 create policy "results_ko_select" on public.results_ko
   for select using (true);
 create policy "results_ko_write" on public.results_ko
+  for all using (
+    (select is_admin from public.profiles where id = auth.uid())
+  );
+
+-- group_tiebreakers: todos leen, solo admin escribe
+create policy "tiebreakers_select" on public.group_tiebreakers
+  for select using (true);
+create policy "tiebreakers_write" on public.group_tiebreakers
   for all using (
     (select is_admin from public.profiles where id = auth.uid())
   );
@@ -104,6 +134,7 @@ alter publication supabase_realtime add table public.predictions_group;
 alter publication supabase_realtime add table public.predictions_ko;
 alter publication supabase_realtime add table public.results_group;
 alter publication supabase_realtime add table public.results_ko;
+alter publication supabase_realtime add table public.group_tiebreakers;
 
 -- ── Para hacer admin al primer usuario ──────────────────────
 -- Después de que el organizador se registre, ejecutar:
