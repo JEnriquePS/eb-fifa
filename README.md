@@ -8,23 +8,35 @@
 
 ## El torneo
 
-**Copa Mundial FIFA 2026**
-🇺🇸 USA · 🇲🇽 México · 🇨🇦 Canadá · 11 jun – 19 jul 2026
+**Copa Mundial FIFA 2026**  
+🇺🇸 USA · 🇲🇽 México · 🇨🇦 Canadá · 11 jun – 19 jul 2026  
 48 selecciones · 12 grupos · 104 partidos
+
+---
+
+## Capturas
+
+| Grupos | Llave | Tabla |
+|--------|-------|-------|
+| ![Grupos](docs/img/screenshots/grupos-fecha.png) | ![Llave](docs/img/screenshots/llave.png) | ![Tabla](docs/img/screenshots/tabla.png) |
+
+| Cómo Jugar | Admin — Resultados |
+|------------|-------------------|
+| ![Reglas](docs/img/screenshots/reglas.png) | ![Admin](docs/img/screenshots/admin-resultados.png) |
 
 ---
 
 ## ¿Cómo funciona?
 
-Cada jugador entra con su correo y recibe un **link mágico** — sin contraseña. Desde ahí puede:
+Los participantes entran con un **código de acceso** compartido por el organizador, y luego se registran con email y contraseña. Desde ahí pueden:
 
 - Pronosticar los marcadores de los **72 partidos de fase de grupos**
-- Armar su **bracket eliminatorio** partido a partido hasta el campeón
+- Armar su **bracket eliminatorio** partido a partido hasta el campeón — incluyendo prórroga y penales
 - Ver el **ranking en tiempo real** contra los demás participantes
 
 Los pronósticos se pueden editar hasta que **el partido inicia** (hora peruana, UTC-5). Una vez que empieza, los inputs se bloquean.
 
-El organizador (admin) ingresa los resultados oficiales — o los sincroniza automáticamente — y el sistema calcula los puntos.
+El organizador (admin) ingresa los resultados oficiales — o los sincroniza automáticamente desde football-data.org — y el sistema calcula los puntos. Si dos equipos quedan igualados en la fase de grupos, el admin puede definir el desempate manualmente.
 
 ---
 
@@ -51,7 +63,7 @@ Cada fase del torneo tiene su propia tabla de clasificación — compites por se
 - XLSX — exportar tabla a Excel
 
 **Backend & servicios**
-- Supabase — base de datos, autenticación (magic links) y tiempo real
+- Supabase — base de datos, autenticación y tiempo real
 - football-data.org — resultados oficiales (sincronización automática para el admin)
 - Google Fonts — tipografías Archivo Black y Barlow
 - GitHub Pages — hosting y despliegue continuo

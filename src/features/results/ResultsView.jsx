@@ -26,6 +26,7 @@ function calcPts(pred, res) {
 function downloadGlobalExcel(players, allPollas, results) {
   const wb = XLSX.utils.book_new();
   const sorted = [...GROUP_MATCHES].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  const usedNames = {};
 
   for (const player of players) {
     const polla = allPollas[player.id] ?? { groupScores: {} };
@@ -43,7 +44,12 @@ function downloadGlobalExcel(players, allPollas, results) {
     }
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!cols"] = [{ wch: 12 }, { wch: 7 }, { wch: 7 }, { wch: 6 }, { wch: 6 }, { wch: 12 }, { wch: 12 }, { wch: 7 }];
-    const sheetName = player.name.slice(0, 31).replace(/[:\\/?*[\]]/g, "");
+    let baseName = player.name.slice(0, 31).replace(/[:\\/?*[\]|]/g, "").trim() || "Jugador";
+    let sheetName = baseName;
+    if (usedNames[sheetName]) {
+      sheetName = baseName.slice(0, 29) + usedNames[sheetName];
+    }
+    usedNames[baseName] = (usedNames[baseName] ?? 1) + 1;
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
   }
 
