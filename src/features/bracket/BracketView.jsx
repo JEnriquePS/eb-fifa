@@ -329,21 +329,45 @@ function BracketConnector({ pairCount, reversed = false }) {
         `M ${W * 0.6} ${yMid} L ${W} ${yMid}`
       );
     } else {
+      // Drawn outer→center (right→left) so dashoffset flows toward trophy
       segs.push(
-        `M 0 ${yMid} L ${W * 0.4} ${yMid}`,
-        `M ${W * 0.4} ${yMid} L ${W * 0.4} ${yTop} L ${W} ${yTop}`,
-        `M ${W * 0.4} ${yMid} L ${W * 0.4} ${yBot} L ${W} ${yBot}`
+        `M ${W} ${yTop} L ${W * 0.4} ${yTop} L ${W * 0.4} ${yMid}`,
+        `M ${W} ${yBot} L ${W * 0.4} ${yBot} L ${W * 0.4} ${yMid}`,
+        `M ${W * 0.4} ${yMid} L 0 ${yMid}`
       );
     }
   }
+
+  const shared = { fill: "none", strokeLinecap: "round", strokeLinejoin: "round", vectorEffect: "non-scaling-stroke" };
+
   return (
     <div className="self-stretch shrink-0 relative" style={{ width: W }}>
-      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-        viewBox={`0 0 ${W} 100`} preserveAspectRatio="none">
+      <svg
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflow: "visible" }}
+        viewBox={`0 0 ${W} 100`} preserveAspectRatio="none"
+      >
+        {/* Outer halo — wide soft gold bloom */}
         {segs.map((d, i) => (
-          <path key={i} d={d} stroke="rgba(63,220,129,0.22)" strokeWidth="1.5"
-            fill="none" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <path key={`h${i}`} d={d} stroke="rgba(238,200,94,0.07)" strokeWidth="7" {...shared} />
         ))}
+        {/* Mid glow */}
+        {segs.map((d, i) => (
+          <path key={`m${i}`} d={d} stroke="rgba(238,200,94,0.13)" strokeWidth="3" {...shared} />
+        ))}
+        {/* Core line */}
+        {segs.map((d, i) => (
+          <path key={`c${i}`} d={d} stroke="rgba(238,200,94,0.35)" strokeWidth="1" {...shared} />
+        ))}
+        {/* Animated dashes — bright core with neon drop-shadow */}
+        <g style={{ filter: "drop-shadow(0 0 2px rgba(238,200,94,0.95)) drop-shadow(0 0 5px rgba(238,200,94,0.5))" }}>
+          {segs.map((d, i) => (
+            <path key={`f${i}`} d={d} stroke="rgba(238,200,94,1)" strokeWidth="1.5" {...shared}
+              strokeDasharray="2 6"
+              className="bracket-flow-path"
+              style={{ animation: "bracket-flow 0.9s linear infinite" }}
+            />
+          ))}
+        </g>
       </svg>
     </div>
   );
