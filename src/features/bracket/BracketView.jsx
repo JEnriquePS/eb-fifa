@@ -1,4 +1,4 @@
-import { Trophy, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { GROUPS, TEAMS } from "../../core/data/teams";
 import { KO_BY_ID, ROUND_LABELS } from "../../core/data/knockoutMatches";
@@ -234,7 +234,11 @@ function Podium({ ctx }) {
 
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-gold/40 bg-panel px-5 py-4 text-center shadow-md">
-      <Trophy className={`w-12 h-12 text-gold ${champion ? "trophy-shine" : "opacity-30"}`} />
+      <img
+        src={`${import.meta.env.BASE_URL}images/trophy.svg`}
+        alt="Copa del Mundo"
+        className={`w-16 h-auto ${champion ? "trophy-shine drop-shadow-[0_0_12px_rgba(238,200,94,0.5)]" : "opacity-30"}`}
+      />
       {champion ? (
         <>
           <div className="flex items-center gap-2">
@@ -388,7 +392,7 @@ function BracketVisual({ ctx, onPick }) {
       </div>
 
       {/* Horizontal bracket */}
-      <div className="overflow-x-auto pb-4">
+      <div key={activePhase} className="overflow-x-auto pb-4 phase-enter">
         <div
           className="flex items-stretch w-fit mx-auto"
           style={{ background: "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(63,220,129,0.07) 0%, transparent 70%)" }}

@@ -123,8 +123,18 @@ input[type=number] {
   animation-delay: var(--row-delay, 0ms);
 }
 
+@keyframes phase-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.phase-enter {
+  animation: phase-in 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none; }
   .trophy-shine { animation: none; }
   .row-enter { animation: none; }
+  .phase-enter { animation: none; }
 }

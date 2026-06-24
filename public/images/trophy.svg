@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#F5D97A"/>
+      <stop offset="35%"  stop-color="#EEC85E"/>
+      <stop offset="65%"  stop-color="#C9961A"/>
+      <stop offset="100%" stop-color="#A07010"/>
+    </linearGradient>
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFF0A0"/>
+      <stop offset="50%"  stop-color="#EEC85E"/>
+      <stop offset="100%" stop-color="#B88020"/>
+    </linearGradient>
+    <linearGradient id="globe" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#F5D97A"/>
+      <stop offset="100%" stop-color="#A87818"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#EEC85E"/>
+      <stop offset="100%" stop-color="#8A6010"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Globe ───────────────────────────────────────────────────── -->
+  <circle cx="80" cy="38" r="26" fill="url(#globe)" filter="url(#glow)"/>
+  <!-- latitude lines -->
+  <ellipse cx="80" cy="38" rx="26" ry="9"  stroke="#A07010" stroke-width="1" fill="none" opacity="0.5"/>
+  <ellipse cx="80" cy="29" rx="18" ry="6"  stroke="#A07010" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <ellipse cx="80" cy="47" rx="18" ry="6"  stroke="#A07010" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <!-- longitude line -->
+  <path d="M80 12 Q90 25 90 38 Q90 51 80 64" stroke="#A07010" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <path d="M80 12 Q70 25 70 38 Q70 51 80 64" stroke="#A07010" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <!-- highlight -->
+  <circle cx="70" cy="28" r="7" fill="white" opacity="0.18"/>
+
+  <!-- ── Left figure ─────────────────────────────────────────────── -->
+  <!-- arm reaching up -->
+  <path d="M54 64 C48 55 46 46 54 38" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- body -->
+  <path d="M54 64 C50 74 50 84 54 90" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- leg left -->
+  <path d="M54 90 C51 100 50 108 52 114" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- leg right -->
+  <path d="M54 90 C57 100 58 108 56 114" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- head -->
+  <circle cx="54" cy="60" r="5.5" fill="url(#goldLight)"/>
+
+  <!-- ── Right figure ────────────────────────────────────────────── -->
+  <!-- arm reaching up -->
+  <path d="M106 64 C112 55 114 46 106 38" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- body -->
+  <path d="M106 64 C110 74 110 84 106 90" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- leg left -->
+  <path d="M106 90 C103 100 102 108 104 114" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- leg right -->
+  <path d="M106 90 C109 100 110 108 108 114" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- head -->
+  <circle cx="106" cy="60" r="5.5" fill="url(#goldLight)"/>
+
+  <!-- ── Neck / stem ─────────────────────────────────────────────── -->
+  <path d="M68 114 L72 138 L88 138 L92 114 Z" fill="url(#gold)"/>
+  <!-- highlight on stem -->
+  <path d="M74 114 L76 138 L78 138 L76 114 Z" fill="white" opacity="0.15"/>
+
+  <!-- ── Upper base ring ─────────────────────────────────────────── -->
+  <rect x="58" y="138" width="44" height="10" rx="2" fill="url(#base)"/>
+  <rect x="60" y="139" width="10" height="3" rx="1" fill="white" opacity="0.12"/>
+
+  <!-- ── Main base ───────────────────────────────────────────────── -->
+  <path d="M48 148 L112 148 L118 172 L42 172 Z" fill="url(#base)"/>
+  <!-- highlight -->
+  <path d="M52 149 L68 149 L66 155 L50 155 Z" fill="white" opacity="0.1"/>
+
+  <!-- ── Bottom base ─────────────────────────────────────────────── -->
+  <rect x="34" y="172" width="92" height="14" rx="3" fill="url(#base)"/>
+  <rect x="36" y="173" width="20" height="4" rx="1" fill="white" opacity="0.12"/>
+
+  <!-- ── Base foot ───────────────────────────────────────────────── -->
+  <rect x="28" y="186" width="104" height="10" rx="3" fill="url(#gold)"/>
+  <rect x="30" y="187" width="24" height="3" rx="1" fill="white" opacity="0.15"/>
+
+  <!-- ── Bottom cap ──────────────────────────────────────────────── -->
+  <rect x="22" y="196" width="116" height="8" rx="3" fill="url(#base)"/>
+
+  <!-- ── Stars ───────────────────────────────────────────────────── -->
+  <text x="80" y="166" text-anchor="middle" font-size="9" fill="#F5D97A" opacity="0.7" font-family="serif">★ ★ ★</text>
+</svg>
