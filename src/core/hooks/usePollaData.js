@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { supabase, db, toPolla, toResults } from "../../lib/supabase";
+import { supabase, db, toPolla, toResults, toTiebreakers } from "../../lib/supabase";
 
 const DEBOUNCE_MS = 900;
 
@@ -31,6 +31,7 @@ export function usePollaData(user) {
       .on("postgres_changes", { event: "*", schema: "public", table: "predictions_ko" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "results_group" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "results_ko" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_tiebreakers" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, reload)
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED");
@@ -96,11 +97,10 @@ export function usePollaData(user) {
   );
 
   const onPick = useCallback(
-    async (matchId, code) => {
+    async (matchId, code, rtHome, rtAway, etHome, etAway, penHome, penAway) => {
       try {
         if (code === undefined) await db.deleteKoPick(user.id, matchId);
-        else await db.upsertKoPick(user.id, matchId, code);
-        // El real-time actualizará el estado
+        else await db.upsertKoPick(user.id, matchId, code, rtHome ?? null, rtAway ?? null, etHome ?? null, etAway ?? null, penHome ?? null, penAway ?? null);
       } catch {
         setSyncStatus("error");
       }
@@ -119,6 +119,23 @@ export function usePollaData(user) {
     else await db.upsertResultKo(matchId, code);
   }, []);
 
+  const onResultKoScore = useCallback(async (matchId, winnerCode, rtHome, rtAway, etHome, etAway, penHome, penAway) => {
+    try {
+      if (winnerCode === undefined) await db.deleteResultKo(matchId);
+      else await db.upsertResultKo(matchId, winnerCode, rtHome ?? null, rtAway ?? null, etHome ?? null, etAway ?? null, penHome ?? null, penAway ?? null);
+    } catch {
+      setSyncStatus("error");
+    }
+  }, []);
+
+  const onTiebreaker = useCallback(async (groupCode, position, teamCode) => {
+    try {
+      await db.upsertTiebreaker(groupCode, position, teamCode);
+    } catch {
+      setSyncStatus("error");
+    }
+  }, []);
+
   // ── Datos derivados ──────────────────────────────────────────────────────
 
   const myDbGroupScores = dbData
@@ -128,24 +145,27 @@ export function usePollaData(user) {
   // Mis scores: DB + cambios locales sin guardar (local gana)
   const myGroupScores = { ...myDbGroupScores, ...localGroupScores };
   const myKoPicks = dbData ? toPolla([], dbData.koPreds, user?.id).koPicks : {};
+  const myKoPickScores = dbData ? toPolla([], dbData.koPreds, user?.id).koPickScores : {};
 
   const players = dbData?.profiles ?? [];
   const me = players.find((p) => p.id === user?.id) ?? null;
 
   const allPollas = dbData
     ? Object.fromEntries(
-        players.map((p) => [
-          p.id,
-          p.id === user?.id
-            ? { groupScores: myGroupScores, koPicks: myKoPicks }
-            : toPolla(dbData.groupPreds, dbData.koPreds, p.id),
-        ])
+        players.map((p) => {
+          if (p.id === user?.id) {
+            return [p.id, { groupScores: myGroupScores, koPicks: myKoPicks, koPickScores: myKoPickScores }];
+          }
+          return [p.id, toPolla(dbData.groupPreds, dbData.koPreds, p.id)];
+        })
       )
     : {};
 
   const results = dbData
     ? toResults(dbData.resultsGroup, dbData.resultsKo)
-    : { groupScores: {}, koPicks: {} };
+    : { groupScores: {}, koPicks: {}, koScores: {} };
+
+  const tiebreakers = dbData ? toTiebreakers(dbData.tiebreakersRaw ?? []) : {};
 
   return {
     loading: !dbData,
@@ -154,14 +174,18 @@ export function usePollaData(user) {
     lastUpdated,
     myGroupScores,
     myKoPicks,
+    myKoPickScores,
     players,
     me,
     allPollas,
     results,
+    tiebreakers,
     onScore,
     onPick,
     onResultScore,
     onResultPick,
+    onResultKoScore,
+    onTiebreaker,
     reload,
   };
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "./core/hooks/useAuth";
 import { usePollaData } from "./core/hooks/usePollaData";
 import { buildContext, pendingMatchesProgress, koWinner } from "./lib/polla";
+import { GROUP_MATCHES } from "./core/data/groupMatches";
 import { scorePlayer } from "./lib/scoring";
 import { Trophy, Award, LogOut } from "lucide-react";
 import { TimezoneContext, useTimezoneState } from "./core/hooks/useTimezone";
@@ -22,6 +23,7 @@ import RulesView from "./features/rules/RulesView";
 
 const ALL_TABS = [
   { id: "groups", label: "Grupos" },
+  { id: "bracket", label: "Llave" },
   { id: "results", label: "Resultados", adminOnly: true },
   { id: "table", label: "Tabla" },
   { id: "rules", label: "Cómo Jugar" },
@@ -45,8 +47,14 @@ function AppShell({ user, signOut }) {
   );
 
   const resultsCtx = useMemo(
-    () => buildContext(data.results.groupScores, data.results.koPicks),
-    [data.results]
+    () => buildContext(data.results.groupScores, data.results.koPicks, data.tiebreakers),
+    [data.results, data.tiebreakers]
+  );
+
+  // Casillas de la llave usan clasificados reales; picks son del usuario
+  const bracketCtx = useMemo(
+    () => buildContext(data.results.groupScores, data.myKoPicks, data.tiebreakers),
+    [data.results.groupScores, data.myKoPicks, data.tiebreakers]
   );
 
   const tabs = ALL_TABS.filter((t) => !t.adminOnly || data.me?.is_admin);
@@ -63,7 +71,9 @@ function AppShell({ user, signOut }) {
 
   const today = new Date().toISOString().slice(0, 10);
   const { predicted, total: pendingTotal } = pendingMatchesProgress(data.myGroupScores, today);
-  const champion = koWinner(104, ctx);
+  const gPlayed = Object.keys(data.results.groupScores).length;
+  const gTotal = GROUP_MATCHES.length;
+  const champion = koWinner(104, bracketCtx);
   const syncInfo = SYNC_LABELS[data.syncStatus];
 
   if (data.loading) {
@@ -120,11 +130,11 @@ function AppShell({ user, signOut }) {
               <div className="h-1.5 w-32 sm:w-48 overflow-hidden rounded-full bg-panel border border-line">
                 <div
                   className="h-full bg-grass transition-all duration-500"
-                  style={{ width: `${pendingTotal > 0 ? (predicted / pendingTotal) * 100 : 100}%` }}
+                  style={{ width: `${gTotal > 0 ? (gPlayed / gTotal) * 100 : 0}%` }}
                 />
               </div>
               <span className="font-cond text-sm text-mist tabular-nums">
-                {predicted}/{pendingTotal}
+                {gPlayed}/{gTotal}
               </span>
             </div>
 
@@ -187,7 +197,7 @@ function AppShell({ user, signOut }) {
           <GroupsView ctx={ctx} resultsCtx={resultsCtx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} onTzChange={setTz} />
         )}
         {tab === "bracket" && (
-          <BracketView ctx={ctx} onPick={data.onPick} />
+          <BracketView ctx={bracketCtx} onPick={data.onPick} />
         )}
         {tab === "results" && (
           <ResultsView
@@ -196,6 +206,7 @@ function AppShell({ user, signOut }) {
             results={data.results}
             onScore={data.onResultScore}
             onPick={data.onResultPick}
+            onResultKoScore={data.onResultKoScore}
             players={data.players}
             allPollas={data.allPollas}
           />
