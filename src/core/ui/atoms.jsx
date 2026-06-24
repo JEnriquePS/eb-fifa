@@ -11,10 +11,9 @@ export function formatDate(iso, { weekday = true } = {}) {
   return weekday ? `${DAYS[date.getDay()]} ${core}` : core;
 }
 
-export const todayISO = () => {
-  const n = new Date();
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
-};
+export function todayISO() {
+  return new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
 const TEXT_SIZE_PX = {
   "text-xs": 12, "text-sm": 14, "text-base": 16, "text-lg": 18,

@@ -322,7 +322,6 @@ function GroupCard({ group, ctx, resultsCtx, scores, results, onScore, index, ad
 function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions, adminMode }) {
   const today = todayISO();
   const focusRef = useRef(null);
-  const [collapsed, setCollapsed] = useState(() => new Set());
 
   const byDate = useMemo(() => {
     const sorted = [...GROUP_MATCHES].sort(
@@ -335,6 +334,12 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions, a
     }
     return [...map.entries()];
   }, []);
+
+  // Initialize collapsed synchronously so the first render already has correct layout
+  // (avoids a timing race where scrollIntoView fires before past sections collapse)
+  const [collapsed, setCollapsed] = useState(
+    () => new Set(byDate.map(([d]) => d).filter((d) => d < today))
+  );
 
   const focusDate = useMemo(() => {
     const dates = byDate.map(([d]) => d);
@@ -355,10 +360,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions, a
   };
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 300);
-    return () => clearTimeout(t);
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   return (
@@ -381,7 +383,7 @@ function ByDateView({ scores, results, onScore, ctx, resultsCtx, matchActions, a
           <section
             key={date}
             ref={isFocus ? focusRef : null}
-            className="rise scroll-mt-24"
+            className="rise scroll-mt-20"
             style={{ animationDelay: `${Math.min(di, 8) * 40}ms` }}
           >
             {/* Date header */}
