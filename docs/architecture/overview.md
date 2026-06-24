@@ -14,15 +14,15 @@ graph TB
     end
 
     subgraph externos["Sistemas externos"]
-        supabase["🗄️ Supabase\nAuth · PostgreSQL\nReal-time · Edge Functions"]
+        supabase["🗄️ Supabase\nAuth · PostgreSQL\nReal-time"]
         github["🌐 GitHub Pages\nHosting estático"]
-        email["📧 Email (Supabase)\nMagic links de acceso"]
+        football["⚽ football-data.org\nResultados oficiales"]
     end
 
     jugador -->|"HTTPS — usa la app"| app
     admin -->|"HTTPS — usa la app"| app
     app -->|"HTTPS / WSS\nAuth, datos, real-time"| supabase
-    supabase -->|"SMTP\nEnvía magic links"| email
+    app -->|"HTTP (via Edge Function)\nSincroniza resultados"| football
     github -->|"Sirve bundle JS/CSS"| app
 ```
 
@@ -38,14 +38,14 @@ graph TB
     admin(["👤 Admin"])
 
     subgraph frontend["Frontend — GitHub Pages"]
-        spa["SPA React / Vite\n\nFeatures:\n• Auth (magic link)\n• Grupos — pronósticos\n• La Llave — bracket\n• Resultados — admin\n• Tabla — ranking\n• Cómo Jugar — reglas"]
+        spa["SPA React / Vite\n\nFeatures:\n• Auth (código de acceso + email + contraseña)\n• Grupos — pronósticos de fase de grupos\n• La Llave — bracket eliminatorio\n• Resultados — admin\n• Tabla — ranking por fase\n• Cómo Jugar — reglas"]
     end
 
     subgraph supabase["Supabase (Backend as a Service)"]
-        auth["Auth Service\nMagic links · JWT\nSesiones persistentes"]
-        db["PostgreSQL\n5 tablas:\nprofiles · predictions_group\npredictions_ko\nresults_group · results_ko"]
+        auth["Auth Service\nEmail + contraseña · JWT\nSesiones persistentes"]
+        db["PostgreSQL\n6 tablas:\nprofiles · predictions_group\npredictions_ko · results_group\nresults_ko · group_tiebreakers"]
         realtime["Real-time\nWebSocket\nCambios en tiempo real"]
-        edge["Edge Function\nsync-results\nSincroniza resultados\ndesde fuente externa"]
+        edge["Edge Function\nsync-results\nSincroniza resultados\ndesde football-data.org"]
     end
 
     subgraph cicd["CI/CD"]
@@ -71,7 +71,7 @@ graph TB
 |----------|----------|--------|
 | Hosting | GitHub Pages | Gratis, integrado con el repo, sin servidor |
 | Backend | Supabase | Auth + DB + real-time en un solo servicio |
-| Auth | Magic links (email) | Sin contraseñas, fácil de usar para el equipo |
+| Auth | Código de acceso + email + contraseña | Acceso controlado para el grupo, sin magic links |
 | Deploy | GitHub Actions | Automatizado al hacer push a `main` |
 | Datos estáticos | Archivos JS en el repo | Los fixtures del torneo no cambian |
 | Tiempo real | Supabase Realtime (WebSocket) | Ranking actualizado sin recargar |

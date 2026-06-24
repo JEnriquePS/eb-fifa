@@ -4,17 +4,21 @@
 
 ```mermaid
 flowchart TD
-    A([Recibe invitación\npor WhatsApp]) --> B[Abre el link\nen el navegador]
+    A([Recibe el link\npor WhatsApp]) --> B[Abre la app\nen el navegador]
     B --> C{¿Tiene sesión\nactiva?}
 
     C -->|Sí| H
-    C -->|No| D[Pantalla de login\ningresa su correo]
+    C -->|No| D[Pantalla de código\nde acceso]
 
-    D --> E[Supabase envía\nmagic link al correo]
-    E --> F[Abre el correo\ny hace clic en el link]
-    F --> G{¿Primera vez?}
+    D --> D2{¿Primera vez?}
+    D2 -->|Sí — se registra| E[Ingresa código de empresa\nemail y contraseña]
+    D2 -->|Ya tiene cuenta| E2[Ingresa email\ny contraseña]
 
-    G -->|Sí| H2[Ingresa su nombre\nde pantalla]
+    E --> E3[Supabase crea cuenta\ny abre sesión JWT]
+    E2 --> E3
+
+    E3 --> G{¿Primera vez?}
+    G -->|Sí| H2[Ingresa nombre\nde display]
     G -->|No| H
 
     H2 --> H[Ve la app completa\nTab: Grupos]
@@ -29,11 +33,11 @@ flowchart TD
     I -->|Sí — partido iniciado| N[Inputs bloqueados\ntooltip: pronóstico cerrado 🔒]
 
     M --> O{¿Quiere pronosticar\neliminatorias?}
-    O -->|Sí| P[Tab: La Llave\nSelecciona ganadores\ndel bracket]
+    O -->|Sí| P[Tab: La Llave\nSelecciona marcadores\nRT / ET / PEN por partido]
     P --> Q[Picks guardados\nen Supabase]
 
     O -->|No| R
-    Q --> R[Tab: Tabla\nRanking en tiempo real]
+    Q --> R[Tab: Tabla\nRanking en tiempo real por fase]
 
     R --> S{¿Se ingresan\nnuevos resultados?}
     S -->|Sí — real-time| T[Tabla se actualiza\nautomáticamente\nsin recargar]
@@ -50,25 +54,30 @@ sequenceDiagram
     actor U as Jugador
     participant App as App React
     participant SB as Supabase Auth
-    participant Email as Correo
 
-    U->>App: Ingresa correo y envía
-    App->>SB: signInWithOtp(email)
-    SB->>Email: Envía magic link
-    Email-->>U: Correo con botón "Entrar a la quiniela"
-
-    U->>App: Clic en magic link
-    App->>SB: Procesa token del link
-    SB-->>App: Sesión JWT activa
-    App->>SB: getProfile(userId)
+    U->>App: Abre la app
+    App-->>U: Pantalla de código de acceso
 
     alt Primera vez
+        U->>App: Ingresa código de empresa
+        App->>SB: RPC check_access_code(código)
+        SB-->>App: válido
+        App-->>U: Formulario de registro
+        U->>App: Ingresa email y contraseña
+        App->>SB: signUp(email, password)
+        SB-->>App: Sesión JWT activa
+        App->>SB: getProfile(userId)
         SB-->>App: perfil: null
         App-->>U: Pantalla "¿Cómo vas a aparecer?"
-        U->>App: Ingresa nombre
+        U->>App: Ingresa nombre de display
         App->>SB: upsertProfile(userId, nombre)
         SB-->>App: Perfil creado
-    else Ya tiene perfil
+    else Ya tiene cuenta
+        U->>App: Clic en "Iniciar sesión"
+        U->>App: Ingresa email y contraseña
+        App->>SB: signInWithPassword(email, password)
+        SB-->>App: Sesión JWT activa
+        App->>SB: getProfile(userId)
         SB-->>App: perfil existente
     end
 

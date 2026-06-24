@@ -54,13 +54,13 @@ Principal área de interacción del participante. Permite pronosticar los 72 par
 - Fechas pasadas están colapsadas por defecto para reducir el scroll.
 - Cada fecha muestra: hora, equipos, inputs de marcador, resultado oficial (si ya existe), estadio y tablas de posiciones de cada grupo presente en esa fecha.
 
-![Vista Por Fecha](../img/screenshots/grupos-by-date.png)
+![Vista Por Fecha](../img/screenshots/grupos-fecha.png)
 
 #### Por Grupo
-- 8 tarjetas (Grupos A–H), cada una con tabla de posiciones y los 6 partidos del grupo.
+- 12 tarjetas (Grupos A–L), cada una con tabla de posiciones y los 6 partidos del grupo.
 - La tabla se calcula en tiempo real con los pronósticos del usuario (o resultados oficiales si ya existen).
 
-![Vista Por Grupo](../img/screenshots/grupos-by-group.png)
+![Vista Por Grupo](../img/screenshots/grupos-grupo.png)
 
 **Inputs de marcador:**
 - Se guardan automáticamente con un debounce de 900 ms.
@@ -121,9 +121,9 @@ Ranking en tiempo real de todos los jugadores.
 Documento de reglas accesible desde la app:
 
 - **Fase de grupos:** exacto = 3 pts · resultado correcto = 1 pt · incorrecto = 0 pts.
-- **Eliminatorias:** puntos por ronda (ver tabla abajo).
+- **Eliminatorias:** misma regla, aplicada a RT / ET / PEN por separado.
 - Ejemplos ilustrados con marcadores reales.
-- Máximo teórico: **338 pts** (216 grupos + 122 eliminatorias).
+- Cada fase tiene su propia tabla de clasificación.
 - Consejos para maximizar puntos.
 
 ---
@@ -154,16 +154,13 @@ Muestra el nombre del usuario autenticado y el botón de logout. Se mantiene vis
 | Resultado incorrecto | **0** |
 | Sin pronóstico cuando hay resultado | **0** |
 
-### Eliminatorias (32 partidos · máx. 122 pts)
+### Eliminatorias (32 partidos)
 
-| Ronda | Partidos | Pts por acierto | Máx. |
-|-------|:--------:|:---------------:|:----:|
-| Ronda de 32 (16avos) | 16 | 2 | 32 |
-| Octavos de final | 8 | 4 | 32 |
-| Cuartos de final | 4 | 6 | 24 |
-| Semifinal | 2 | 8 | 16 |
-| Tercer puesto | 1 | 8 | 8 |
-| Final | 1 | 10 | 10 |
+Misma regla que grupos: exacto = 3 pts · resultado correcto = 1 pt.
+
+El jugador pronostica el marcador de **tiempo reglamentario (RT)**. Si el partido va a prórroga, también pronostica **ET**; si va a penales, también **PEN**. Cada fase puntúa de forma independiente.
+
+Cada ronda eliminatoria tiene su **propia tabla de clasificación** — dieciseisavos, octavos, cuartos, semis y final se computan por separado.
 
 ### Desempate en la tabla
 

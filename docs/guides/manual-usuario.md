@@ -58,7 +58,7 @@ Los horarios de los partidos se muestran en hora Lima (UTC-5) por defecto. Puede
 - La vista **Por Fecha** hace auto-scroll a los partidos de hoy al cargar.
 - Las fechas pasadas están colapsadas — haz click en el encabezado de la fecha para expandirlas.
 
-![Vista Por Fecha](../img/screenshots/grupos-by-date.png)
+![Vista Por Fecha](../img/screenshots/grupos-fecha.png)
 
 ---
 
@@ -114,7 +114,7 @@ En el **header** de la app hay una barra de progreso verde que muestra cuántos 
 
 > **Tip:** los marcadores exactos valen 3 veces más que solo acertar el resultado. Vale la pena arriesgar un marcador específico.
 
-**Máximo posible:** 338 puntos (216 en grupos + 122 en eliminatorias).
+En eliminatorias pronosticas el marcador de RT; si hay prórroga también ET; si hay penales también PEN. Cada fase puntúa por separado con la misma regla.
 
 Para ver las reglas completas con ejemplos, ve a la tab **Cómo Jugar**.
 
