@@ -233,37 +233,40 @@ function Podium({ ctx }) {
   const third = koWinner(103, ctx);
 
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-gold/40 bg-panel px-5 py-4 text-center shadow-md">
-      <img
-        src={`${import.meta.env.BASE_URL}images/trophy.svg`}
-        alt="Copa del Mundo"
-        className={`w-16 h-auto ${champion ? "trophy-shine drop-shadow-[0_0_12px_rgba(238,200,94,0.5)]" : "opacity-30"}`}
-      />
-      {champion ? (
-        <>
-          <div className="flex items-center gap-2">
-            <Flag code={champion} className="text-3xl" />
-            <span className="font-display text-lg text-gold">{TEAMS[champion].name}</span>
-          </div>
-          <span className="font-cond text-xs uppercase tracking-[0.25em] text-gold/80">Tu campeón del mundo</span>
-          <div className="mt-1 flex flex-col gap-1 font-cond text-sm text-mist">
-            {runnerUp && (
-              <span className="inline-flex items-center justify-center gap-1.5">
-                🥈 <Flag code={runnerUp} className="text-base" /> {TEAMS[runnerUp].name}
-              </span>
-            )}
-            {third && (
-              <span className="inline-flex items-center justify-center gap-1.5">
-                🥉 <Flag code={third} className="text-base" /> {TEAMS[third].name}
-              </span>
-            )}
-          </div>
-        </>
-      ) : (
-        <span className="font-cond text-sm text-mist max-w-[12rem]">
-          Completa tu llave para coronar a tu campeón
-        </span>
-      )}
+    <div className="relative w-44">
+      {/* Trophy image con padding */}
+      <div className="p-4">
+        <img
+          src={`${import.meta.env.BASE_URL}images/2026_FIFA_World_Cup.webp`}
+          alt="FIFA World Cup 2026"
+          className="w-full h-auto object-contain block mix-blend-multiply"
+          draggable={false}
+        />
+      </div>
+      {/* Winner overlay at bottom */}
+      <div className="absolute inset-0 flex flex-col items-center justify-end from-night/95 to-transparent gap-1">
+        {champion ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Flag code={champion} className="text-xl" />
+              <span className="font-display text-base text-gold leading-tight">{TEAMS[champion].name}</span>
+            </div>
+            <span className="font-cond text-[10px] uppercase tracking-[0.2em] text-gold/70">Tu campeón</span>
+            <div className="flex flex-col items-center gap-0.5 font-cond text-xs text-mist mt-0.5">
+              {runnerUp && (
+                <span className="inline-flex items-center gap-1">
+                  🥈 <Flag code={runnerUp} className="text-sm" /> {TEAMS[runnerUp].name}
+                </span>
+              )}
+              {third && (
+                <span className="inline-flex items-center gap-1">
+                  🥉 <Flag code={third} className="text-sm" /> {TEAMS[third].name}
+                </span>
+              )}
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -375,7 +378,7 @@ function BracketVisual({ ctx, onPick }) {
               <button
                 key={p.id}
                 onClick={() => setActivePhase(p.id)}
-                className={`cursor-pointer rounded-md px-4 py-1.5 font-bold text-[11px] uppercase tracking-wider transition-colors duration-150 focus:outline-none whitespace-nowrap ${
+                className={`cursor-pointer rounded-md px-4 py-1.5 font-bold text-sm uppercase tracking-wider transition-colors duration-150 focus:outline-none whitespace-nowrap ${
                   isActive ? "bg-gold text-night" : "text-mist hover:text-chalk"
                 }`}
               >
@@ -406,8 +409,22 @@ function BracketVisual({ ctx, onPick }) {
           <BracketColumn ids={LEFT.SF}   ctx={ctx} onPick={onPick} active={activePhase === "sf"}  disabled={groupsLocked} />
           <BracketConnector pairCount={1} reversed />
 
-          <div className="flex flex-col self-stretch">
-            {/* Mitad superior → Final (25%) */}
+          <div className="flex flex-col self-stretch relative min-h-[72rem]">
+            {/* Copa — absoluta en el centro en todas las fases */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+              {activePhase === "f"
+                ? <Podium ctx={ctx} />
+                : <img
+                    src={`${import.meta.env.BASE_URL}images/2026_FIFA_World_Cup.webp`}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-16 h-auto object-contain mix-blend-multiply"
+                    draggable={false}
+                  />
+              }
+            </div>
+
+            {/* Final — mitad superior, centrada en su mitad → conector apunta al 25% */}
             <div className="flex-1 flex flex-col items-center justify-center gap-2 px-2">
               <h4 className={`text-center font-display text-sm uppercase tracking-widest ${
                 activePhase === "f" ? "text-gold" : "text-gold/40"
@@ -416,9 +433,9 @@ function BracketVisual({ ctx, onPick }) {
                 ? <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} />
                 : <KoCardSlot matchId={104} ctx={ctx} />}
             </div>
-            {/* Mitad inferior → 3er puesto (75%) */}
+
+            {/* 3er puesto — mitad inferior, centrada en su mitad → conector apunta al 75% */}
             <div className="flex-1 flex flex-col items-center justify-center gap-2 px-2">
-              {activePhase === "f" && <Podium ctx={ctx} />}
               <h4 className="text-center font-cond text-xs font-bold uppercase tracking-[0.2em] text-mist/60">
                 3er puesto
               </h4>
@@ -451,8 +468,9 @@ export default function BracketView({ ctx, onPick }) {
 
   return (
     <div>
+      <BracketVisual ctx={ctx} onPick={onPick} />
       {!allGroupsDone && (
-        <div className="mb-4 rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 flex flex-col gap-1">
+        <div className="mt-4 rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 flex flex-col gap-1">
           <p className="font-cond text-sm text-chalk">
             Los pronósticos de eliminatorias se habilitarán cuando terminen los grupos —{" "}
             <span className="text-amber font-semibold">{groupsComplete}/12 grupos finalizados.</span>
@@ -462,7 +480,6 @@ export default function BracketView({ ctx, onPick }) {
           </p>
         </div>
       )}
-      <BracketVisual ctx={ctx} onPick={onPick} />
     </div>
   );
 }
