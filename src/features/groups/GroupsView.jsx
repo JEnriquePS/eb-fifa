@@ -92,12 +92,12 @@ function ScoreCenter({ score, result, locked, inProgress, adminMode, set, homeLa
     return (
       <div className="flex flex-col items-center gap-0.5">
         <div className="flex items-center gap-1">
-          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
-            <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[0]}</span>
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{score[0]}</span>
           </div>
-          <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
-          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-mist/20 bg-turf shadow-inner">
-            <span className="font-display text-xl font-bold text-mist/60 tabular-nums leading-none">{score[1]}</span>
+          <span className="font-cond text-[9px] uppercase tracking-widest text-grass border border-grass/40 rounded px-1 py-0.5">FT</span>
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+            <span className="font-display text-xl font-bold text-grass tabular-nums leading-none">{score[1]}</span>
           </div>
         </div>
         {!adminMode && <span className="font-cond text-[9px] text-mist/30 uppercase tracking-wider">Mi marcador</span>}

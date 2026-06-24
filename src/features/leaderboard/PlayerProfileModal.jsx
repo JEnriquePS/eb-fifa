@@ -173,7 +173,7 @@ export function PlayerProfileModal({ player, rank, allPollas, results, onClose }
                         </div>
 
                         {/* Resultado + pronóstico */}
-                        <div className="flex flex-col items-center gap-0.5 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           <div className="flex items-center gap-0.5">
                             <div className="w-7 h-7 flex items-center justify-center rounded border border-grass/50 bg-turf">
                               <span className="font-display text-sm font-bold text-grass tabular-nums leading-none">{res[0]}</span>
@@ -188,9 +188,11 @@ export function PlayerProfileModal({ player, rank, allPollas, results, onClose }
                             const outcome = Math.sign(pred[0] - pred[1]) === Math.sign(res[0] - res[1]);
                             const dotColor = exact ? "bg-grass" : outcome ? "bg-gold" : "bg-red-400/80";
                             return (
-                              <div className="flex items-center gap-1">
-                                <span className="font-cond text-xs font-semibold tabular-nums text-chalk">{pred[0]}–{pred[1]}</span>
-                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+                              <div className="flex flex-col items-center gap-0.5">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-cond text-xs font-semibold tabular-nums text-chalk">{pred[0]}–{pred[1]}</span>
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+                                </div>
                                 <span className="font-cond text-[9px] text-mist/40 uppercase tracking-wider">Mi marc.</span>
                               </div>
                             );
