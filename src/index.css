@@ -75,6 +75,9 @@ input[type=number] {
   appearance: textfield;
 }
 
+.scrollbar-hide { scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* scrollbar del bracket */
 .bracket-scroll::-webkit-scrollbar {
   height: 10px;

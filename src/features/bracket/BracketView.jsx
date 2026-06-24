@@ -274,11 +274,11 @@ function Podium({ ctx }) {
 // ── Bracket visual (tabs por fase + horizontal con conectores) ───────────────
 
 const BRACKET_PHASES = [
-  { id: "r32", label: "16vos",     leftIds: LEFT.R32,  rightIds: RIGHT.R32  },
-  { id: "r16", label: "8vos",   leftIds: LEFT.R16,  rightIds: RIGHT.R16  },
-  { id: "qf",  label: "4tos",  leftIds: LEFT.QF,   rightIds: RIGHT.QF   },
-  { id: "sf",  label: "Semi",  leftIds: LEFT.SF,   rightIds: RIGHT.SF   },
-  { id: "f",   label: "Final",     leftIds: [],        rightIds: []          },
+  { id: "r32", label: "16vos", leftIds: LEFT.R32, rightIds: RIGHT.R32, mobileIds: [...LEFT.R32, ...RIGHT.R32] },
+  { id: "r16", label: "8vos",  leftIds: LEFT.R16, rightIds: RIGHT.R16, mobileIds: [...LEFT.R16, ...RIGHT.R16] },
+  { id: "qf",  label: "4tos",  leftIds: LEFT.QF,  rightIds: RIGHT.QF,  mobileIds: [...LEFT.QF,  ...RIGHT.QF]  },
+  { id: "sf",  label: "Semi",  leftIds: LEFT.SF,  rightIds: RIGHT.SF,  mobileIds: [...LEFT.SF,  ...RIGHT.SF]  },
+  { id: "f",   label: "Final", leftIds: [],        rightIds: [],        mobileIds: [104, 103]                  },
 ];
 
 // Slot mini para fases inactivas: solo bandera + nombre o placeholder
@@ -392,8 +392,8 @@ function BracketVisual({ ctx, onPick }) {
   return (
     <div>
       {/* Phase tab nav */}
-      <div className="flex justify-center mb-5">
-        <div className="flex gap-1 rounded-lg border border-line bg-turf/40 p-1 overflow-x-auto">
+      <div className="overflow-x-auto mb-5 scrollbar-hide">
+        <div className="flex gap-1 rounded-lg border border-line bg-turf/40 p-1 w-max mx-auto">
           {BRACKET_PHASES.map((p) => {
             const pIds = [...p.leftIds, ...p.rightIds];
             const picked = pIds.filter((id) => koWinner(id, ctx, true)).length;
@@ -418,8 +418,41 @@ function BracketVisual({ ctx, onPick }) {
         </div>
       </div>
 
-      {/* Horizontal bracket */}
-      <div key={activePhase} className="overflow-x-auto pb-4 phase-enter">
+      {/* Mobile: left + right columns like desktop but without connectors */}
+      {(() => {
+        const phase = BRACKET_PHASES.find(p => p.id === activePhase);
+        const leftIds  = phase?.leftIds  ?? [];
+        const rightIds = phase?.rightIds ?? [];
+        const isFinal  = activePhase === "f";
+        return (
+          <div key={`mob-${activePhase}`} className="md:hidden phase-enter">
+            <div className="flex gap-2">
+              {/* Left column */}
+              <div className="flex-1 flex flex-col gap-3">
+                {isFinal
+                  ? <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid />
+                  : leftIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid />)
+                }
+              </div>
+              {/* Right column */}
+              <div className="flex-1 flex flex-col gap-3">
+                {isFinal
+                  ? <KoCard matchId={103} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid />
+                  : rightIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid />)
+                }
+              </div>
+            </div>
+            {isFinal && (
+              <div className="flex justify-center pt-4">
+                <Podium ctx={ctx} />
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Desktop: horizontal bracket */}
+      <div key={activePhase} className="hidden md:block overflow-x-auto pb-4 phase-enter">
         <div
           className="flex items-stretch w-fit mx-auto"
           style={{ background: "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(63,220,129,0.07) 0%, transparent 70%)" }}
