@@ -20,6 +20,7 @@ import BracketView from "./features/bracket/BracketView";
 import ResultsView from "./features/results/ResultsView";
 import LeaderboardView from "./features/leaderboard/LeaderboardView";
 import RulesView from "./features/rules/RulesView";
+import ScoringModal from "./features/rules/ScoringModal";
 
 const ALL_TABS = [
   { id: "groups", label: "Grupos" },
@@ -197,7 +198,10 @@ function AppShell({ user, signOut }) {
           <GroupsView ctx={ctx} resultsCtx={resultsCtx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} onTzChange={setTz} />
         )}
         {tab === "bracket" && (
-          <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} />
+          <>
+            <ScoringModal />
+            <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} />
+          </>
         )}
         {tab === "results" && (
           <ResultsView
