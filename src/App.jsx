@@ -197,7 +197,7 @@ function AppShell({ user, signOut }) {
           <GroupsView ctx={ctx} resultsCtx={resultsCtx} scores={data.myGroupScores} onScore={data.onScore} results={data.results.groupScores} onTzChange={setTz} />
         )}
         {tab === "bracket" && (
-          <BracketView ctx={bracketCtx} onPick={data.onPick} />
+          <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} />
         )}
         {tab === "results" && (
           <ResultsView

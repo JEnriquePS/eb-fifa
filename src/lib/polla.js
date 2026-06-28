@@ -1,4 +1,4 @@
-import { GROUPS, groupOf } from "../core/data/teams.js";
+import { GROUPS, TEAMS, groupOf } from "../core/data/teams.js";
 import { GROUP_MATCHES } from "../core/data/groupMatches.js";
 import { KO_MATCHES, KO_BY_ID } from "../core/data/knockoutMatches.js";
 
@@ -170,6 +170,7 @@ export function computeThirds(tables, complete, provisional = false) {
 
 // provisional=true: muestra el líder actual aunque el grupo no haya terminado
 export function resolveSlot(slot, matchId, ctx, provisional = false) {
+  if (TEAMS[slot]) return slot;
   if (/^[12][A-L]$/.test(slot)) {
     const g = slot[1];
     const idx = slot[0] === "1" ? 0 : 1;
@@ -241,6 +242,7 @@ export function buildContext(groupScores, koPicks, tiebreakers = {}) {
 // ── Etiquetas ────────────────────────────────────────────────────────────────
 
 export function slotLabel(slot) {
+  if (TEAMS[slot]) return TEAMS[slot].name;
   if (/^[12][A-L]$/.test(slot)) return `${slot[0]}° Grupo ${slot[1]}`;
   if (slot.startsWith("3")) return `3° ${slot.slice(1).split("").join("/")}`;
   return `${slot[0] === "W" ? "Ganador" : "Perdedor"} P${slot.slice(1)}`;

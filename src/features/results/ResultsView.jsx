@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { TimezoneContext } from "../../core/hooks/useTimezone";
 import { RefreshCw, Lock, KeyRound } from "lucide-react";
 import * as XLSX from "xlsx";
 import GroupsView from "../groups/GroupsView";
@@ -170,6 +171,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
   const [resultPhase, setResultPhase] = useState("groups");
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
+  const tz = useContext(TimezoneContext);
 
   if (!me?.is_admin) {
     return (
@@ -191,7 +193,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
     setSyncing(true);
     setSyncMsg(null);
     try {
-      const { synced, total, notFound } = await syncResultsFromAPI();
+      const { synced, total, notFound } = await syncResultsFromAPI(tz);
       const extra = notFound.length ? ` · No encontrados: ${notFound.join(", ")}` : "";
       setSyncMsg({ ok: true, text: `${synced} de ${total} partidos sincronizados${extra}` });
     } catch (e) {

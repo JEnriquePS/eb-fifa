@@ -15,7 +15,9 @@ const MATCH_LOOKUP = Object.fromEntries(
   GROUP_MATCHES.map((m) => [`${m.h}-${m.a}`, m.m])
 );
 
-export async function syncResultsFromAPI() {
+export async function syncResultsFromAPI(tz = "America/Lima") {
+  const todayLocal = new Date().toLocaleDateString("en-CA", { timeZone: tz });
+
   // La Edge Function llama a football-data.org server-side (sin CORS)
   const { data, error } = await supabase.functions.invoke("sync-results");
 
@@ -28,7 +30,8 @@ export async function syncResultsFromAPI() {
     (m) =>
       m.status === "FINISHED" &&
       m.score?.fullTime?.home != null &&
-      m.score?.fullTime?.away != null
+      m.score?.fullTime?.away != null &&
+      new Date(m.utcDate).toLocaleDateString("en-CA", { timeZone: tz }) === todayLocal
   );
 
   let synced = 0;

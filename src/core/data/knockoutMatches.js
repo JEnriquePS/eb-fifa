@@ -1,25 +1,24 @@
 // 32 partidos de fase eliminatoria — bracket oficial FIFA 2026.
 // time = hora de Perú (UTC-5, Lima).
-// Slots: "1A" ganador de grupo, "2A" segundo, "3ABCDF" tercero proveniente de
-// uno de esos grupos, "W73" ganador del partido 73, "L101" perdedor del 101.
+// R32: equipos reales. R16+: "W73" ganador del partido 73, "L101" perdedor del 101.
 
 export const KO_MATCHES = [
-  { m: 73, round: "R32", hs: "2A", as: "2B", date: "2026-06-28", time: "14:00", stadium: "SoFi Stadium", city: "Los Ángeles" },
-  { m: 74, round: "R32", hs: "1E", as: "3ABCDF", date: "2026-06-29", time: "15:30", stadium: "Gillette Stadium", city: "Boston" },
-  { m: 75, round: "R32", hs: "1F", as: "2C", date: "2026-06-29", time: "20:00", stadium: "Estadio BBVA", city: "Monterrey" },
-  { m: 76, round: "R32", hs: "1C", as: "2F", date: "2026-06-29", time: "12:00", stadium: "NRG Stadium", city: "Houston" },
-  { m: 77, round: "R32", hs: "1I", as: "3CDFGH", date: "2026-06-30", time: "16:00", stadium: "MetLife Stadium", city: "Nueva York/NJ" },
-  { m: 78, round: "R32", hs: "2E", as: "2I", date: "2026-06-30", time: "12:00", stadium: "AT&T Stadium", city: "Dallas" },
-  { m: 79, round: "R32", hs: "1A", as: "3CEFHI", date: "2026-06-30", time: "20:00", stadium: "Estadio Azteca", city: "Ciudad de México" },
-  { m: 80, round: "R32", hs: "1L", as: "3EHIJK", date: "2026-07-01", time: "11:00", stadium: "Mercedes-Benz Stadium", city: "Atlanta" },
-  { m: 81, round: "R32", hs: "1D", as: "3BEFIJ", date: "2026-07-01", time: "19:00", stadium: "Levi's Stadium", city: "San Francisco" },
-  { m: 82, round: "R32", hs: "1G", as: "3AEHIJ", date: "2026-07-01", time: "15:00", stadium: "Lumen Field", city: "Seattle" },
-  { m: 83, round: "R32", hs: "2K", as: "2L", date: "2026-07-02", time: "18:00", stadium: "BMO Field", city: "Toronto" },
-  { m: 84, round: "R32", hs: "1H", as: "2J", date: "2026-07-02", time: "14:00", stadium: "SoFi Stadium", city: "Los Ángeles" },
-  { m: 85, round: "R32", hs: "1B", as: "3EFGIJ", date: "2026-07-02", time: "22:00", stadium: "BC Place", city: "Vancouver" },
-  { m: 86, round: "R32", hs: "1J", as: "2H", date: "2026-07-03", time: "17:00", stadium: "Hard Rock Stadium", city: "Miami" },
-  { m: 87, round: "R32", hs: "1K", as: "3DEIJL", date: "2026-07-03", time: "20:30", stadium: "Arrowhead Stadium", city: "Kansas City" },
-  { m: 88, round: "R32", hs: "2D", as: "2G", date: "2026-07-03", time: "13:00", stadium: "AT&T Stadium", city: "Dallas" },
+  { m: 73, round: "R32", hs: "RSA", as: "CAN", date: "2026-06-28", time: "14:00", stadium: "SoFi Stadium", city: "Los Ángeles" },
+  { m: 74, round: "R32", hs: "GER", as: "PAR", date: "2026-06-29", time: "15:30", stadium: "Gillette Stadium", city: "Boston" },
+  { m: 75, round: "R32", hs: "NED", as: "MAR", date: "2026-06-29", time: "20:00", stadium: "Estadio BBVA", city: "Monterrey" },
+  { m: 76, round: "R32", hs: "BRA", as: "JPN", date: "2026-06-29", time: "12:00", stadium: "NRG Stadium", city: "Houston" },
+  { m: 77, round: "R32", hs: "FRA", as: "SWE", date: "2026-06-30", time: "16:00", stadium: "MetLife Stadium", city: "Nueva York/NJ" },
+  { m: 78, round: "R32", hs: "CIV", as: "NOR", date: "2026-06-30", time: "12:00", stadium: "AT&T Stadium", city: "Dallas" },
+  { m: 79, round: "R32", hs: "MEX", as: "ECU", date: "2026-06-30", time: "20:00", stadium: "Estadio Azteca", city: "Ciudad de México" },
+  { m: 80, round: "R32", hs: "ENG", as: "COD", date: "2026-07-01", time: "11:00", stadium: "Mercedes-Benz Stadium", city: "Atlanta" },
+  { m: 81, round: "R32", hs: "USA", as: "BIH", date: "2026-07-01", time: "19:00", stadium: "Levi's Stadium", city: "San Francisco" },
+  { m: 82, round: "R32", hs: "BEL", as: "SEN", date: "2026-07-01", time: "15:00", stadium: "Lumen Field", city: "Seattle" },
+  { m: 83, round: "R32", hs: "POR", as: "CRO", date: "2026-07-02", time: "18:00", stadium: "BMO Field", city: "Toronto" },
+  { m: 84, round: "R32", hs: "ESP", as: "AUT", date: "2026-07-02", time: "14:00", stadium: "SoFi Stadium", city: "Los Ángeles" },
+  { m: 85, round: "R32", hs: "SUI", as: "ALG", date: "2026-07-02", time: "22:00", stadium: "BC Place", city: "Vancouver" },
+  { m: 86, round: "R32", hs: "ARG", as: "CPV", date: "2026-07-03", time: "17:00", stadium: "Hard Rock Stadium", city: "Miami" },
+  { m: 87, round: "R32", hs: "COL", as: "GHA", date: "2026-07-03", time: "20:30", stadium: "Arrowhead Stadium", city: "Kansas City" },
+  { m: 88, round: "R32", hs: "AUS", as: "EGY", date: "2026-07-03", time: "13:00", stadium: "AT&T Stadium", city: "Dallas" },
   { m: 89, round: "R16", hs: "W74", as: "W77", date: "2026-07-04", time: "16:00", stadium: "Lincoln Financial Field", city: "Filadelfia" },
   { m: 90, round: "R16", hs: "W73", as: "W75", date: "2026-07-04", time: "12:00", stadium: "NRG Stadium", city: "Houston" },
   { m: 91, round: "R16", hs: "W76", as: "W78", date: "2026-07-05", time: "15:00", stadium: "MetLife Stadium", city: "Nueva York/NJ" },
