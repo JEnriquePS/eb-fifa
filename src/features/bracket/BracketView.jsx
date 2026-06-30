@@ -371,22 +371,24 @@ function KoCardSlot({ matchId, ctx, resultsCtx }) {
   );
 }
 
-function BracketConnector({ pairCount, reversed = false }) {
-  const W = 30;
-  const segs = [];
+function buildConnectorSegs(pairCount, reversed, W, leftCenters, rightCenters) {
   const N = pairCount * 2;
+  const segs = [];
   for (let j = 0; j < pairCount; j++) {
-    const yTop = ((2 * j + 0.5) / N) * 100;
-    const yBot = ((2 * j + 1.5) / N) * 100;
-    const yMid = (yTop + yBot) / 2;
     if (!reversed) {
+      const yTop = leftCenters?.[2 * j]     ?? ((2 * j + 0.5) / N * 100);
+      const yBot = leftCenters?.[2 * j + 1] ?? ((2 * j + 1.5) / N * 100);
+      const yMid = rightCenters?.[j]        ?? ((j + 0.5) / pairCount * 100);
       segs.push(
         `M 0 ${yTop} L ${W * 0.6} ${yTop} L ${W * 0.6} ${yMid}`,
         `M 0 ${yBot} L ${W * 0.6} ${yBot} L ${W * 0.6} ${yMid}`,
         `M ${W * 0.6} ${yMid} L ${W} ${yMid}`
       );
     } else {
-      // Drawn outer→center (right→left) so dashoffset flows toward trophy
+      // reversed: many side = right sibling, few side = left sibling
+      const yTop = rightCenters?.[2 * j]     ?? ((2 * j + 0.5) / N * 100);
+      const yBot = rightCenters?.[2 * j + 1] ?? ((2 * j + 1.5) / N * 100);
+      const yMid = leftCenters?.[j]          ?? ((j + 0.5) / pairCount * 100);
       segs.push(
         `M ${W} ${yTop} L ${W * 0.4} ${yTop} L ${W * 0.4} ${yMid}`,
         `M ${W} ${yBot} L ${W * 0.4} ${yBot} L ${W * 0.4} ${yMid}`,
@@ -394,11 +396,48 @@ function BracketConnector({ pairCount, reversed = false }) {
       );
     }
   }
+  return segs;
+}
+
+function BracketConnector({ pairCount, reversed = false }) {
+  const W = 30;
+  const divRef = useRef(null);
+  const [segs, setSegs] = useState(() => buildConnectorSegs(pairCount, reversed, W, null, null));
+
+  useEffect(() => {
+    const el = divRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (!rect.height) return;
+
+      const leftCol = el.previousElementSibling;
+      const rightCol = el.nextElementSibling;
+      if (!leftCol || !rightCol) return;
+
+      const centers = (col) =>
+        [...col.querySelectorAll("[data-bracket-card]")].map((c) => {
+          const r = c.getBoundingClientRect();
+          return ((r.top + r.height / 2) - rect.top) / rect.height * 100;
+        });
+
+      const L = centers(leftCol);
+      const R = centers(rightCol);
+      if (!L.length || !R.length) return;
+      setSegs(buildConnectorSegs(pairCount, reversed, W, L, R));
+    };
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(el.parentElement);
+    measure();
+    return () => ro.disconnect();
+  }, [pairCount, reversed]);
 
   const shared = { fill: "none", strokeLinecap: "round", strokeLinejoin: "round", vectorEffect: "non-scaling-stroke" };
 
   return (
-    <div className="self-stretch shrink-0 relative" style={{ width: W }}>
+    <div ref={divRef} className="self-stretch shrink-0 relative" style={{ width: W }}>
       <svg
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflow: "visible" }}
         viewBox={`0 0 ${W} 100`} preserveAspectRatio="none"
@@ -434,10 +473,14 @@ function BracketColumn({ ids, ctx, resultsCtx, onPick, active = false, disabled 
   return (
     <div className="flex flex-col">
       <div className="flex flex-1 flex-col justify-around gap-3">
-        {ids.map((id) => active
-          ? <KoCard key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} />
-          : <KoCardSlot key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} />
-        )}
+        {ids.map((id) => (
+          <div key={id} data-bracket-card>
+            {active
+              ? <KoCard matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} />
+              : <KoCardSlot matchId={id} ctx={ctx} resultsCtx={resultsCtx} />
+            }
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -856,9 +899,11 @@ function BracketVisual({ ctx, resultsCtx, onPick, koPickScores = {}, koScores = 
               <h4 className={`text-center font-display text-sm uppercase tracking-widest ${
                 activePhase === "f" ? "text-gold" : "text-gold/40"
               }`}>Final</h4>
-              {activePhase === "f"
-                ? <KoCard matchId={104} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
-                : <KoCardSlot matchId={104} ctx={ctx} resultsCtx={resultsCtx} />}
+              <div data-bracket-card>
+                {activePhase === "f"
+                  ? <KoCard matchId={104} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+                  : <KoCardSlot matchId={104} ctx={ctx} resultsCtx={resultsCtx} />}
+              </div>
             </div>
 
             {/* 3er puesto — mitad inferior, centrada en su mitad → conector apunta al 75% */}
@@ -866,9 +911,11 @@ function BracketVisual({ ctx, resultsCtx, onPick, koPickScores = {}, koScores = 
               <h4 className="text-center font-cond text-xs font-bold uppercase tracking-[0.2em] text-mist/60">
                 3er puesto
               </h4>
-              {activePhase === "f"
-                ? <KoCard matchId={103} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
-                : <KoCardSlot matchId={103} ctx={ctx} resultsCtx={resultsCtx} />}
+              <div data-bracket-card>
+                {activePhase === "f"
+                  ? <KoCard matchId={103} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+                  : <KoCardSlot matchId={103} ctx={ctx} resultsCtx={resultsCtx} />}
+              </div>
             </div>
           </div>
 

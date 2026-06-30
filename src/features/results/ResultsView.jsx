@@ -207,71 +207,74 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
 
   return (
     <div>
-      <div className="mb-5 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex flex-wrap items-start gap-4">
-        <KeyRound className="w-5 h-5 mt-0.5 text-gold shrink-0" />
-        <div className="flex-1 min-w-[200px]">
-          <p className="font-cond font-bold uppercase tracking-wider text-gold text-sm">Modo Admin — Resultados Oficiales</p>
-          <p className="font-cond text-sm text-chalk mt-0.5">
-            Los cambios que hagas aquí se reflejan en tiempo real en la tabla de posiciones de todos los jugadores.
-          </p>
+      <div className="sticky top-12 z-10 bg-night pb-4">
+        <div className="mb-3 rounded-lg border border-gold/50 bg-gold/10 px-4 py-3 flex flex-wrap items-start gap-4">
+          <KeyRound className="w-5 h-5 mt-0.5 text-gold shrink-0" />
+          <div className="flex-1 min-w-[200px]">
+            <p className="font-cond font-bold uppercase tracking-wider text-gold text-sm">Modo Admin — Resultados Oficiales</p>
+            <p className="font-cond text-sm text-chalk mt-0.5">
+              Los cambios que hagas aquí se reflejan en tiempo real en la tabla de posiciones de todos los jugadores.
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1.5">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="shrink-0 cursor-pointer rounded-lg border border-gold/50 bg-gold/10 hover:bg-gold/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-gold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-gold flex items-center gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Sincronizando…" : "Sincronizar"}
+            </button>
+            <p className="font-cond text-[11px] text-mist/70 text-right max-w-[200px]">
+              Importa marcadores finales desde football-data.org
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="shrink-0 cursor-pointer rounded-lg border border-gold/50 bg-gold/10 hover:bg-gold/20 px-3 py-1.5 font-cond text-sm font-semibold uppercase tracking-wider text-gold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-gold flex items-center gap-1.5"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando…" : "Sincronizar"}
-          </button>
-          <p className="font-cond text-[11px] text-mist/70 text-right max-w-[200px]">
-            Importa marcadores finales desde football-data.org
-          </p>
+
+        <div className="flex border-b border-line">
+          {[
+            { id: "results", label: "Ingresar Resultados" },
+            { id: "predictions", label: "Pronósticos" },
+          ].map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSub(s.id)}
+              className={`cursor-pointer border-b-2 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
+                sub === s.id ? "border-gold text-gold" : "border-transparent text-mist hover:text-chalk"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
-      </div>
 
-      {syncMsg && (
-        <div className={`mb-5 rounded-lg border px-4 py-2.5 font-cond text-sm ${syncMsg.ok ? "border-grass/40 bg-grass/10 text-grass" : "border-gold/40 bg-gold/10 text-gold"}`}>
-          {syncMsg.text}
-        </div>
-      )}
-
-      <div className="mb-5 flex border-b border-line">
-        {[
-          { id: "results", label: "Ingresar Resultados" },
-          { id: "predictions", label: "Pronósticos" },
-        ].map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setSub(s.id)}
-            className={`cursor-pointer border-b-2 px-4 py-2.5 font-cond font-bold uppercase tracking-wider text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
-              sub === s.id ? "border-gold text-gold" : "border-transparent text-mist hover:text-chalk"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {sub === "results" ? (
-        <>
-          {/* Toggle Grupos / R32 */}
-          <div className="mb-5 flex gap-1 rounded-lg border border-line bg-turf/40 p-1 w-fit">
+        {sub === "results" && (
+          <div className="mt-4 flex gap-1 rounded-lg border border-line bg-turf/40 p-1 w-fit">
             {[{ id: "groups", label: "Grupos" }, { id: "r32", label: "Dieciseisavos" }].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setResultPhase(t.id)}
                 className={`cursor-pointer rounded-md px-4 py-1.5 font-cond font-bold text-sm uppercase tracking-wider transition-colors duration-150 focus:outline-none ${
-                  resultPhase === t.id
-                    ? "bg-gold text-night"
-                    : "text-mist hover:text-chalk"
+                  resultPhase === t.id ? "bg-gold text-night" : "text-mist hover:text-chalk"
                 }`}
               >
                 {t.label}
               </button>
             ))}
           </div>
+        )}
+      </div>
 
+      {syncMsg && (
+        <div className={`mt-4 mb-5 rounded-lg border px-4 py-2.5 font-cond text-sm ${syncMsg.ok ? "border-grass/40 bg-grass/10 text-grass" : "border-gold/40 bg-gold/10 text-gold"}`}>
+          {syncMsg.text}
+        </div>
+      )}
+
+      <div className="mt-5">
+
+      {sub === "results" ? (
+        <>
           {resultPhase === "groups" ? (
             <GroupsView
               ctx={resultsCtx}
@@ -320,6 +323,7 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
       ) : (
         <PlayerPredictionsView players={players ?? []} allPollas={allPollas ?? {}} results={results} baseUrl={import.meta.env.BASE_URL} />
       )}
+      </div>
     </div>
   );
 }

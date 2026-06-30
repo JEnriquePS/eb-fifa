@@ -367,6 +367,23 @@ function KoShareCard({ cardRef, matchId, home, away, players, allPollas, koScore
 
       {/* Player predictions */}
       <div style={{ padding: "6px 0" }}>
+        {/* Column headers */}
+        <div style={{
+          display: "flex", alignItems: "center", padding: "2px 16px 6px", gap: 8,
+          borderBottom: "1px solid rgba(255,255,255,0.08)", marginBottom: 2,
+        }}>
+          <div style={{ flex: "0 0 80px" }} />
+          <div style={{ flex: "0 0 56px", fontSize: 9, color: "#8fa88f", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>Ganador</div>
+          <div style={{ flex: 1, fontSize: 9, textAlign: "center", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
+            <span style={{ color: "#7ab87a" }}>RT</span>
+            <span style={{ margin: "0 4px", color: "#4a5e4a" }}>·</span>
+            <span style={{ color: "#cc8844" }}>AET</span>
+            <span style={{ margin: "0 4px", color: "#4a5e4a" }}>·</span>
+            <span style={{ color: "#c0a030" }}>PEN</span>
+          </div>
+          <div style={{ flex: "0 0 24px", fontSize: 9, color: "#8fa88f", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1, textAlign: "right" }}>Pts</div>
+        </div>
+
         {nonAdminPlayers.map((p, i) => {
           const polla = allPollas[p.id] ?? {};
           const winnerPick = polla.koPicks?.[matchId];
