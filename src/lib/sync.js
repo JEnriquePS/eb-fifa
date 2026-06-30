@@ -71,8 +71,7 @@ export async function syncResultsFromAPI(tz = "America/Lima") {
     (m) =>
       m.stage === "LAST_32" &&
       m.status === "FINISHED" &&
-      m.score?.fullTime?.home != null &&
-      isToday(m.utcDate, tz, todayLocal)
+      m.score?.fullTime?.home != null
   );
 
   let syncedKo = 0;
