@@ -35,7 +35,7 @@ export default function LeaderboardView({
 }) {
   const [prev] = useState({});
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [phase, setPhase] = useState("grupos"); // "grupos" | "r32"
+  const [phase, setPhase] = useState("r32"); // "grupos" | "r32"
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -134,10 +134,10 @@ export default function LeaderboardView({
               <p className="font-display text-3xl text-chalk tabular-nums">{leader.total}</p>
               <p className="font-cond text-xs uppercase tracking-widest text-mist">puntos</p>
             </div>
-            {leader.total > 0 && ranking[1] && (
+            {leader.total > 0 && activeRanking[1] && (
               <div className="text-right border-l border-line pl-4">
                 <p className="font-display text-lg text-mist tabular-nums">
-                  +{leader.total - ranking[1].total}
+                  +{leader.total - activeRanking[1].total}
                 </p>
                 <p className="font-cond text-xs uppercase tracking-widest text-mist">sobre 2°</p>
               </div>
@@ -194,8 +194,8 @@ export default function LeaderboardView({
                 <td className="py-3">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => phase === "grupos" && setSelectedPlayer({ player: p, rank: i + 1 })}
-                      className={`font-cond font-semibold text-base text-chalk transition-colors duration-150 focus:outline-none focus-visible:underline text-left ${phase === "grupos" ? "cursor-pointer hover:text-gold" : "cursor-default"}`}
+                      onClick={() => setSelectedPlayer({ player: p, rank: i + 1 })}
+                      className="font-cond font-semibold text-base text-chalk transition-colors duration-150 focus:outline-none focus-visible:underline text-left cursor-pointer hover:text-gold"
                     >
                       {p.name}
                     </button>
@@ -260,6 +260,8 @@ export default function LeaderboardView({
           rank={selectedPlayer.rank}
           allPollas={allPollas}
           results={results}
+          resultsCtx={resultsCtx}
+          phase={phase}
           onClose={() => setSelectedPlayer(null)}
         />
       )}

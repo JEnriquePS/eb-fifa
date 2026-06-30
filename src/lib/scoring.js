@@ -17,7 +17,7 @@ function scorePhase(predH, predA, resH, resA) {
 //   RT siempre se puntúa si hay resultado.
 //   ET solo si el RT fue empate (resRtH === resRtA).
 //   PEN solo si el ET también fue empate (resEtH === resEtA).
-function scoreKoMatch(pred, res) {
+export function scoreKoMatch(pred, res) {
   let pts = 0;
   const rtDraw = res.rtHome != null && res.rtHome === res.rtAway;
   const etDraw = rtDraw && res.etHome != null && res.etHome === res.etAway;

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { TEAMS } from "../../core/data/teams";
 import { KO_BY_ID } from "../../core/data/knockoutMatches";
 import { resolveKoMatch } from "../../lib/polla";
-import { Flag, TimeChip, formatDate } from "../../core/ui/atoms";
+import { Flag, TimeChip, formatDate, todayISO } from "../../core/ui/atoms";
 
 // ─── Score boxes ──────────────────────────────────────────────────────────────
 
@@ -18,11 +19,12 @@ function ScoreBox({ val, onChange, locked, color = "grass" }) {
   }
   return (
     <input
-      type="number"
-      min="0"
-      max="99"
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      maxLength={2}
       value={val}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
       className="w-9 h-9 text-center rounded-lg border border-line bg-turf text-chalk font-display text-xl font-bold tabular-nums focus:outline-none focus:border-grass/60 focus:ring-1 focus:ring-grass/30 shadow-inner"
     />
   );
@@ -166,7 +168,7 @@ function KoScoreCenter({ matchId, home, away, existingResult, onResultKoScore, b
 
 // ─── Match row — mismo layout que ByDateView en GroupsView ────────────────────
 
-function KoMatchRow({ matchId, resultsCtx, existingResult, onResultKoScore, isLast }) {
+function KoMatchRow({ matchId, resultsCtx, existingResult, onResultKoScore, isLast, action }) {
   const k = KO_BY_ID[matchId];
   const { home, away } = resolveKoMatch(matchId, resultsCtx, true);
   const bothKnown = !!home && !!away;
@@ -246,6 +248,9 @@ function KoMatchRow({ matchId, resultsCtx, existingResult, onResultKoScore, isLa
           <p className="font-cond text-xs text-mist leading-tight truncate">{k.stadium}</p>
           <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60 truncate">{k.city}</p>
         </div>
+
+        {/* Acción (ej. compartir) */}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </div>
   );
@@ -255,7 +260,10 @@ function KoMatchRow({ matchId, resultsCtx, existingResult, onResultKoScore, isLa
 
 const R32_IDS = [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88];
 
-export default function R32AdminView({ resultsCtx, koScores, onResultKoScore }) {
+export default function R32AdminView({ resultsCtx, koScores, onResultKoScore, matchActions }) {
+  const today = todayISO();
+  const focusRef = useRef(null);
+
   const byDate = useMemo(() => {
     const sorted = R32_IDS
       .map((id) => ({ id, ...KO_BY_ID[id] }))
@@ -269,40 +277,96 @@ export default function R32AdminView({ resultsCtx, koScores, onResultKoScore }) 
     return [...map.entries()];
   }, []);
 
+  const [collapsed, setCollapsed] = useState(
+    () => new Set(byDate.map(([d]) => d).filter((d) => d < today))
+  );
+
+  const focusDate = useMemo(() => {
+    const dates = byDate.map(([d]) => d);
+    if (dates.includes(today)) return today;
+    return dates.find((d) => d > today) ?? dates[dates.length - 1];
+  }, [byDate, today]);
+
+  useEffect(() => {
+    setCollapsed(new Set(byDate.map(([d]) => d).filter((d) => d < today)));
+  }, [byDate, today]);
+
+  useEffect(() => {
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const toggleDate = (date) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(date) ? next.delete(date) : next.add(date);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-7">
       <p className="font-cond text-xs text-mist uppercase tracking-wider">
         Marcadores finales acumulados · 90' → AET (incluye goles de 90') → PEN (tanda, ej. 5-4)
       </p>
 
-      {byDate.map(([date, ids]) => (
-        <section key={date} className="rise scroll-mt-24">
-          {/* Cabecera de fecha — igual que ByDateView */}
-          <header className="mb-3 flex items-center gap-3">
-            <h3 className="font-display text-base uppercase tracking-wide text-chalk">
-              {formatDate(date)}
-            </h3>
-            <span className="font-cond text-xs text-mist">
-              {ids.length} partido{ids.length > 1 ? "s" : ""}
-            </span>
-            <div className="chalk-rule flex-1" />
-          </header>
+      {byDate.map(([date, ids]) => {
+        const isToday = date === today;
+        const isFocus = date === focusDate;
+        const isPast = date < today;
+        const isCollapsed = collapsed.has(date);
 
-          {/* Partidos del día */}
-          <div className="rounded-xl border border-line overflow-hidden mb-3">
-            {ids.map((id, idx) => (
-              <KoMatchRow
-                key={id}
-                matchId={id}
-                resultsCtx={resultsCtx}
-                existingResult={koScores[id]}
-                onResultKoScore={onResultKoScore}
-                isLast={idx === ids.length - 1}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+        return (
+          <section key={date} ref={isFocus ? focusRef : null} className="rise scroll-mt-24">
+            <header
+              className={`sticky top-[3.4rem] z-10 mb-3 flex items-center gap-3 bg-night/95 backdrop-blur-sm py-1.5 ${isPast ? "cursor-pointer select-none" : ""}`}
+              onClick={isPast ? () => toggleDate(date) : undefined}
+            >
+              <h3 className={`font-display text-base uppercase tracking-wide ${isToday ? "text-grass" : "text-chalk"}`}>
+                {formatDate(date)}
+              </h3>
+              {isToday && (
+                <span className="rounded-full bg-grass text-night px-2.5 py-0.5 font-cond text-[11px] font-bold uppercase tracking-widest">
+                  Hoy
+                </span>
+              )}
+              <span className="font-cond text-xs text-mist">
+                {ids.length} partido{ids.length > 1 ? "s" : ""}
+              </span>
+              <div className="chalk-rule flex-1" />
+              {isPast && (
+                <ChevronDown
+                  className="w-4 h-4 text-mist/60 ml-1 shrink-0 transition-transform duration-300"
+                  style={{ transform: isCollapsed ? "rotate(90deg)" : "rotate(0deg)" }}
+                />
+              )}
+            </header>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateRows: isCollapsed ? "0fr" : "1fr",
+                transition: "grid-template-rows 300ms ease",
+              }}
+            >
+              <div style={{ overflow: "hidden" }}>
+                <div className="rounded-xl border border-line overflow-hidden mb-3">
+                  {ids.map((id, idx) => (
+                    <KoMatchRow
+                      key={id}
+                      matchId={id}
+                      resultsCtx={resultsCtx}
+                      existingResult={koScores[id]}
+                      onResultKoScore={onResultKoScore}
+                      isLast={idx === ids.length - 1}
+                      action={matchActions?.[id]}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

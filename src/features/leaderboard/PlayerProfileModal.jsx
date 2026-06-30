@@ -1,8 +1,11 @@
 import { createPortal } from "react-dom";
-import { X, Target, Check, Minus, AlertCircle, Flame, TrendingUp } from "lucide-react";
+import { X, Check, Minus, AlertCircle, Flame, TrendingUp } from "lucide-react";
 import { GROUP_MATCHES } from "../../core/data/groupMatches";
-import { validScore } from "../../lib/polla";
+import { KO_MATCHES, KO_BY_ID } from "../../core/data/knockoutMatches";
+import { validScore, resolveKoMatch } from "../../lib/polla";
+import { scoreKoMatch } from "../../lib/scoring";
 import { Flag } from "../../core/ui/atoms";
+import { TEAMS } from "../../core/data/teams";
 
 function matchPts(pred, res) {
   if (!validScore(res)) return null;        // no jugado
@@ -70,10 +73,37 @@ function StatBox({ label, value, sub, color = "#e8ede8" }) {
   );
 }
 
-export function PlayerProfileModal({ player, rank, allPollas, results, onClose }) {
+function buildR32Stats(playerId, allPollas, results, resultsCtx) {
+  const polla = allPollas[playerId] ?? { koPicks: {}, koPickScores: {} };
+  const koScores = results.koScores ?? {};
+  const R32 = KO_MATCHES.filter((k) => k.round === "R32");
+  const rows = [];
+  let exact = 0, acertado = 0, fallado = 0, sinPred = 0, winnerHit = 0;
+
+  for (const k of R32) {
+    const res = koScores[k.m];
+    if (!res?.winner) continue;
+    const { home, away } = resolveKoMatch(k.m, resultsCtx, true);
+    const pred = polla.koPickScores?.[k.m] ?? null;
+    const winnerPick = polla.koPicks?.[k.m] ?? null;
+    const pts = pred ? scoreKoMatch(pred, res) : null;
+    if (pts === null) sinPred++;
+    else if (pts >= 3) exact++;
+    else if (pts >= 1) acertado++;
+    else fallado++;
+    if (winnerPick && winnerPick === res.winner) winnerHit++;
+    rows.push({ k, home, away, res, pred, winnerPick, pts });
+  }
+
+  return { exact, acertado, fallado, sinPred, winnerHit, rows, played: rows.length };
+}
+
+export function PlayerProfileModal({ player, rank, allPollas, results, resultsCtx, phase = "grupos", onClose }) {
   if (!player) return null;
 
-  const stats = buildStats(player.id, allPollas, results);
+  const stats = phase === "r32"
+    ? buildR32Stats(player.id, allPollas, results, resultsCtx)
+    : buildStats(player.id, allPollas, results);
 
   return createPortal(
     <div
@@ -109,6 +139,82 @@ export function PlayerProfileModal({ player, rank, allPollas, results, onClose }
             <p className="text-center font-cond text-sm text-mist py-6">
               Aún no hay partidos jugados.
             </p>
+          ) : phase === "r32" ? (
+            <>
+              {/* Stats R32 */}
+              <div className="grid grid-cols-4 gap-2">
+                <StatBox label="Exactos" value={stats.exact} sub="≥3 pts" color="#4caf50" />
+                <StatBox label="Acertados" value={stats.acertado} sub="1-2 pts" color="#f0c040" />
+                <StatBox label="Fallados" value={stats.fallado} color="#e57373" />
+                <StatBox label="Clasif." value={stats.winnerHit} sub="pick correcto" color="#64b5f6" />
+              </div>
+
+              {/* Lista partidos R32 */}
+              <div>
+                <p className="font-cond text-[10px] uppercase tracking-widest text-mist mb-2">
+                  Partidos jugados ({stats.played})
+                </p>
+                <div className="rounded-xl border border-line overflow-hidden">
+                  {[...stats.rows].reverse().map(({ k, home, away, res, pred, winnerPick, pts }, i) => {
+                    const winnerName = res.winner ? (TEAMS[res.winner]?.name ?? res.winner) : "—";
+                    const pickedRight = winnerPick && winnerPick === res.winner;
+                    const ptsStyle = pts === null
+                      ? PTS_STYLE["nopred"]
+                      : pts >= 3 ? PTS_STYLE[3]
+                      : pts >= 1 ? PTS_STYLE[1]
+                      : PTS_STYLE[0];
+                    return (
+                      <div
+                        key={k.m}
+                        className="flex items-center gap-3 px-3 py-2.5 border-b border-line/60 last:border-b-0"
+                        style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent" }}
+                      >
+                        {/* Equipos */}
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          {home && <Flag code={home} size={14} />}
+                          <span className="font-cond text-xs text-mist shrink-0">{home ?? k.hs}</span>
+                          <span className="font-cond text-[10px] text-mist/40">vs</span>
+                          <span className="font-cond text-xs text-mist shrink-0">{away ?? k.as}</span>
+                          {away && <Flag code={away} size={14} />}
+                        </div>
+
+                        {/* Resultado RT */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="font-display text-sm text-grass tabular-nums">{res.rtHome}–{res.rtAway}</span>
+                          {res.etHome != null && <span className="font-cond text-[9px] text-amber border border-amber/40 rounded px-0.5">AET {res.etHome}–{res.etAway}</span>}
+                          {res.penHome != null && <span className="font-cond text-[9px] text-gold border border-gold/40 rounded px-0.5">P {res.penHome}–{res.penAway}</span>}
+                        </div>
+
+                        {/* Pronóstico */}
+                        <div className="shrink-0 text-right">
+                          {pred ? (
+                            <div className="font-cond text-xs text-chalk tabular-nums">
+                              {pred.rtHome}–{pred.rtAway}
+                              {pred.etHome != null && <span className="text-amber"> · {pred.etHome}–{pred.etAway}</span>}
+                              {pred.penHome != null && <span className="text-gold"> · {pred.penHome}–{pred.penAway}</span>}
+                            </div>
+                          ) : (
+                            <span className="font-cond text-xs italic text-mist/40">s/pron.</span>
+                          )}
+                          <div className="font-cond text-[9px] text-mist/50 mt-0.5">
+                            {pickedRight ? <span className="text-grass">✓ {winnerName}</span> : winnerPick ? <span className="text-red-400/70">✗ {TEAMS[winnerPick]?.name ?? winnerPick}</span> : <span>—</span>}
+                          </div>
+                        </div>
+
+                        {/* Pts */}
+                        <div
+                          className="flex items-center gap-1 rounded-full px-2 py-0.5 font-cond text-[11px] font-bold shrink-0 w-12 justify-center"
+                          style={{ background: ptsStyle.bg, color: ptsStyle.color }}
+                        >
+                          {ptsStyle.icon}
+                          {pts !== null ? (pts > 0 ? `+${pts}` : "0") : "—"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           ) : (
             <>
               {/* Stats grid */}

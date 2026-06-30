@@ -38,7 +38,8 @@ const SYNC_LABELS = {
 };
 
 function AppShell({ user, signOut }) {
-  const [tab, setTab] = useState("groups");
+  const [tab, setTab] = useState("bracket");
+  const switchTab = (t) => { setTab(t); window.scrollTo({ top: 0, behavior: "instant" }); };
   const { tz, setTz } = useTimezoneState();
   const data = usePollaData(user);
 
@@ -166,7 +167,7 @@ function AppShell({ user, signOut }) {
             {tabs.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => switchTab(t.id)}
                 aria-current={tab === t.id ? "page" : undefined}
                 className={`shrink-0 cursor-pointer border-b-2 px-3 sm:px-4 py-3 font-cond font-bold uppercase tracking-[0.15em] text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-grass focus-visible:ring-offset-2 focus-visible:ring-offset-night ${
                   tab === t.id
@@ -200,7 +201,7 @@ function AppShell({ user, signOut }) {
         {tab === "bracket" && (
           <>
             <ScoringModal />
-            <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} />
+            <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} koScores={data.results.koScores ?? {}} />
           </>
         )}
         {tab === "results" && (

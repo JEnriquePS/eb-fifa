@@ -9,7 +9,9 @@ import { GROUP_MATCHES } from "../../core/data/groupMatches";
 import { validScore } from "../../lib/polla";
 import { TEAMS } from "../../core/data/teams";
 import { Flag } from "../../core/ui/atoms";
-import { MatchShareButton } from "./MatchShareCard";
+import { MatchShareButton, KoMatchShareButton } from "./MatchShareCard";
+import { resolveKoMatch } from "../../lib/polla";
+import { KO_MATCHES } from "../../core/data/knockoutMatches";
 
 function formatDate(d) {
   const [, m, day] = d.split("-");
@@ -168,7 +170,7 @@ function PlayerPredictionsView({ players, allPollas, results, baseUrl }) {
 
 export default function ResultsView({ me, resultsCtx, results, onScore, onPick, onResultKoScore, players, allPollas }) {
   const [sub, setSub] = useState("results");
-  const [resultPhase, setResultPhase] = useState("groups");
+  const [resultPhase, setResultPhase] = useState("r32");
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
   const tz = useContext(TimezoneContext);
@@ -295,6 +297,23 @@ export default function ResultsView({ me, resultsCtx, results, onScore, onPick, 
               resultsCtx={resultsCtx}
               koScores={results.koScores ?? {}}
               onResultKoScore={onResultKoScore}
+              matchActions={Object.fromEntries(
+                KO_MATCHES.filter((k) => k.round === "R32").map((k) => {
+                  const { home, away } = resolveKoMatch(k.m, resultsCtx, true);
+                  return [k.m, (
+                    <KoMatchShareButton
+                      key={k.m}
+                      matchId={k.m}
+                      home={home}
+                      away={away}
+                      players={players ?? []}
+                      allPollas={allPollas ?? {}}
+                      koScores={results.koScores ?? {}}
+                      baseUrl={import.meta.env.BASE_URL}
+                    />
+                  )];
+                })
+              )}
             />
           )}
         </>
