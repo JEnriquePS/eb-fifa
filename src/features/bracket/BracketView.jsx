@@ -469,7 +469,7 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const timer = useRef(null);
   const restoringRef = useRef(false);
 
-  // Pre-cargar scores guardados al montar
+  // Sincronizar inputs con scores guardados cuando llegan del servidor
   useEffect(() => {
     if (saved?.rtHome == null) return;
     restoringRef.current = true;
@@ -480,7 +480,7 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
     setPenH(saved.penHome != null ? String(saved.penHome) : "");
     setPenA(saved.penAway != null ? String(saved.penAway) : "");
     setPhase(saved.penHome != null ? "pen" : saved.etHome != null ? "et" : "rt");
-  }, [matchId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [matchId, saved?.rtHome, saved?.rtAway, saved?.etHome, saved?.penHome]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const teamsKey = `${home ?? ""}-${away ?? ""}`;
   useEffect(() => {
