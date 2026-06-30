@@ -1,9 +1,9 @@
-import { Check } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GROUPS, TEAMS } from "../../core/data/teams";
 import { KO_BY_ID, ROUND_LABELS } from "../../core/data/knockoutMatches";
 import { resolveKoMatch, koWinner, slotLabel } from "../../lib/polla";
-import { Flag, TimeChip, formatDate } from "../../core/ui/atoms";
+import { Flag, TimeChip, formatDate, todayISO } from "../../core/ui/atoms";
 
 const LEFT  = { R32: [74, 77, 73, 75, 83, 84, 81, 82], R16: [89, 90, 93, 94], QF: [97, 98], SF: [101] };
 const RIGHT = { R32: [76, 78, 79, 80, 86, 88, 85, 87], R16: [91, 92, 95, 96], QF: [99, 100], SF: [102] };
@@ -76,6 +76,7 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
   // Partido bloqueado si ya tiene resultado en BD o si su horario ya pasó (tiempos en UTC-5)
   const matchStarted = new Date(`${k.date}T${k.time}:00-05:00`) < new Date();
   const isPlayed = !!koScores[matchId]?.winner || matchStarted;
+  const isToday = k.date === todayISO();
   const saved = koPickScores[matchId];
 
   const [rtH, setRtH] = useState("");
@@ -186,12 +187,17 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
           ? "inset 3px 0 0 #3fdc81, 0 0 0 2px rgba(63,220,129,0.35), 0 8px 24px rgba(63,220,129,0.15)"
           : winner
           ? "inset 3px 0 0 rgba(238,200,94,0.75), 0 4px 16px rgba(0,0,0,0.4)"
+          : isToday && !isPlayed
+          ? "inset 3px 0 0 rgba(240,192,64,0.9), 0 0 0 1px rgba(240,192,64,0.3), 0 4px 16px rgba(240,192,64,0.12)"
           : "0 2px 10px rgba(0,0,0,0.3)",
       }}
     >
       <header className="flex items-center justify-between bg-turf/80 px-2.5 py-1 border-b border-line">
-        <span className="font-cond text-[10px] font-semibold uppercase tracking-widest text-mist">
+        <span className="font-cond text-[10px] font-semibold uppercase tracking-widest text-mist flex items-center gap-1.5">
           P{k.m} · {formatDate(k.date, { weekday: false })}
+          {isToday && !isPlayed && (
+            <span className="rounded-full bg-amber/20 border border-amber/50 text-amber px-1.5 py-px text-[9px] font-bold uppercase tracking-widest leading-none">Hoy</span>
+          )}
         </span>
         <TimeChip time={k.time} className="text-[10px]" />
       </header>
@@ -446,11 +452,302 @@ function BracketColumn({ ids, ctx, onPick, active = false, disabled = false, koP
   );
 }
 
+function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, koScores = {}, isLast }) {
+  const k = KO_BY_ID[matchId];
+  const { home, away } = resolveKoMatch(matchId, ctx, true);
+  const winner = koWinner(matchId, ctx, true);
+  const bothKnown = !!home && !!away;
+  const matchStarted = new Date(`${k.date}T${k.time}:00-05:00`) < new Date();
+  const isPlayed = !!koScores[matchId]?.winner || matchStarted;
+  const saved = koPickScores[matchId];
+  const res = koScores[matchId] ?? null;
+
+  const [rtH, setRtH] = useState("");
+  const [rtA, setRtA] = useState("");
+  const [etH, setEtH] = useState("");
+  const [etA, setEtA] = useState("");
+  const [penH, setPenH] = useState("");
+  const [penA, setPenA] = useState("");
+  const [phase, setPhase] = useState("rt");
+  const timer = useRef(null);
+  const restoringRef = useRef(false);
+
+  const teamsKey = `${home ?? ""}-${away ?? ""}`;
+  useEffect(() => {
+    setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA(""); setPhase("rt");
+  }, [teamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rtHn = parseInt(rtH, 10), rtAn = parseInt(rtA, 10);
+  const rtValid = rtH !== "" && rtA !== "" && !isNaN(rtHn) && !isNaN(rtAn);
+  useEffect(() => {
+    if (!rtValid || !bothKnown || !!winner) return;
+    if (timer.current) clearTimeout(timer.current);
+    if (rtHn !== rtAn) {
+      const code = rtHn > rtAn ? home : away;
+      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, rtHn, rtAn, null, null); }, 600);
+    } else if (phase === "rt") { setPhase("et"); }
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [rtH, rtA]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const etHn = parseInt(etH, 10), etAn = parseInt(etA, 10);
+  const etValid = etH !== "" && etA !== "" && !isNaN(etHn) && !isNaN(etAn);
+  useEffect(() => {
+    if (phase !== "et" || !etValid || !bothKnown || !!winner) return;
+    if (timer.current) clearTimeout(timer.current);
+    if (etHn !== etAn) {
+      const code = etHn > etAn ? home : away;
+      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), etHn, etAn); }, 600);
+    } else { setPhase("pen"); }
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [etH, etA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const penHn = parseInt(penH, 10), penAn = parseInt(penA, 10);
+  const penValid = penH !== "" && penA !== "" && !isNaN(penHn) && !isNaN(penAn);
+  useEffect(() => {
+    if (phase !== "pen" || !penValid || !bothKnown || !!winner || penHn === penAn) return;
+    const code = penHn > penAn ? home : away;
+    timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), parseInt(etH,10), parseInt(etA,10), penHn, penAn); }, 600);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [penH, penA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clear = () => {
+    if (timer.current) clearTimeout(timer.current);
+    restoringRef.current = true;
+    setTimeout(() => { restoringRef.current = false; }, 700);
+    setRtH(saved?.rtHome != null ? String(saved.rtHome) : "");
+    setRtA(saved?.rtAway != null ? String(saved.rtAway) : "");
+    setEtH(saved?.etHome != null ? String(saved.etHome) : "");
+    setEtA(saved?.etAway != null ? String(saved.etAway) : "");
+    setPenH(saved?.penHome != null ? String(saved.penHome) : "");
+    setPenA(saved?.penAway != null ? String(saved.penAway) : "");
+    setPhase(saved?.penHome != null ? "pen" : saved?.etHome != null ? "et" : "rt");
+    onPick(matchId, undefined);
+  };
+
+  const isRtLocked = phase === "et" || phase === "pen";
+  const isEtLocked = phase === "pen";
+  const showInputs = bothKnown && !winner && !isPlayed && !disabled;
+  const showSaved = !!winner && saved?.rtHome != null;
+  const showCambiar = !!winner && !isPlayed;
+
+  // Center: resultado oficial o inputs/pronóstico guardado
+  const center = res ? (
+    // Partido jugado — mostrar resultado oficial + predicción del jugador
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1">
+        <div className="w-8 h-8 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+          <span className="font-display text-lg font-bold text-grass tabular-nums leading-none">{res.rtHome}</span>
+        </div>
+        <span className="font-cond text-[8px] uppercase tracking-widest text-grass border border-grass/40 rounded px-1 py-px">FT</span>
+        <div className="w-8 h-8 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
+          <span className="font-display text-lg font-bold text-grass tabular-nums leading-none">{res.rtAway}</span>
+        </div>
+      </div>
+      {res.etHome != null && (
+        <div className="flex items-center gap-1">
+          <span className="font-display text-xs font-bold text-amber tabular-nums">{res.etHome}</span>
+          <span className="font-cond text-[8px] text-amber border border-amber/40 rounded px-0.5 py-px">AET</span>
+          <span className="font-display text-xs font-bold text-amber tabular-nums">{res.etAway}</span>
+        </div>
+      )}
+      {res.penHome != null && (
+        <div className="flex items-center gap-1">
+          <span className="font-display text-xs font-bold text-gold tabular-nums">{res.penHome}</span>
+          <span className="font-cond text-[8px] text-gold border border-gold/40 rounded px-0.5 py-px">PEN</span>
+          <span className="font-display text-xs font-bold text-gold tabular-nums">{res.penAway}</span>
+        </div>
+      )}
+      {saved?.rtHome != null && (() => {
+        const exact = saved.rtHome === res.rtHome && saved.rtAway === res.rtAway;
+        const outcome = !exact && Math.sign(saved.rtHome - saved.rtAway) === Math.sign(res.rtHome - res.rtAway);
+        const dot = exact ? "bg-grass" : outcome ? "bg-gold" : "bg-red-400/80";
+        return (
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="font-cond text-[10px] tabular-nums text-chalk">{saved.rtHome}–{saved.rtAway}</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+          </div>
+        );
+      })()}
+    </div>
+  ) : showInputs ? (
+    // Partido no jugado — inputs activos
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center gap-1">
+        <ScoreBox val={rtH} onChange={setRtH} locked={isRtLocked} />
+        <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 py-px">
+          {phase === "et" ? "AET" : phase === "pen" ? "PEN" : "RT"}
+        </span>
+        <ScoreBox val={rtA} onChange={setRtA} locked={isRtLocked} />
+      </div>
+      {(phase === "et" || phase === "pen") && (
+        <div className="flex items-center gap-1">
+          <ScoreBox val={etH} onChange={setEtH} locked={isEtLocked} amber />
+          <span className="font-cond text-[8px] text-amber border border-amber/30 rounded px-0.5 py-px">AET</span>
+          <ScoreBox val={etA} onChange={setEtA} locked={isEtLocked} amber />
+        </div>
+      )}
+      {phase === "pen" && (
+        <div className="flex items-center gap-1">
+          <ScoreBox val={penH} onChange={setPenH} locked={false} amber={false} />
+          <span className="font-cond text-[8px] text-gold border border-gold/30 rounded px-0.5 py-px">PEN</span>
+          <ScoreBox val={penA} onChange={setPenA} locked={false} amber={false} />
+        </div>
+      )}
+    </div>
+  ) : showSaved ? (
+    // Ganador elegido, solo lectura
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1">
+        <ScoreBox val={String(saved.rtHome)} onChange={() => {}} locked />
+        <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 py-px">RT</span>
+        <ScoreBox val={String(saved.rtAway)} onChange={() => {}} locked />
+      </div>
+      {showCambiar && (
+        <button onClick={clear} className="font-cond text-[9px] text-mist/40 hover:text-mist cursor-pointer transition-colors">cambiar ×</button>
+      )}
+    </div>
+  ) : (
+    <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
+  );
+
+  const homeName = home ? (TEAMS[home]?.name ?? home) : null;
+  const awayName = away ? (TEAMS[away]?.name ?? away) : null;
+
+  return (
+    <div className={`bg-panel px-4 ${isLast ? "" : "border-b border-line/40"}`}>
+      <div className="py-2 flex items-center gap-3">
+        <TimeChip date={k.date} time={k.time} className="text-[11px] w-[4.5rem] shrink-0 justify-center" />
+        <div className="flex-1 min-w-0" style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)", alignItems: "center", columnGap: "0.5rem" }}>
+          <div className="flex items-center justify-end gap-1.5 min-w-0">
+            <span className={`font-cond font-semibold text-sm flex-1 min-w-0 text-right truncate ${winner && winner === home ? "text-gold" : winner && home ? "text-mist line-through decoration-mist/50" : ""}`}>
+              {homeName ?? <span className="text-mist/40 italic font-normal">{k.hs ? `1° Gr.${k.hs[1]}` : "—"}</span>}
+            </span>
+            {home && <Flag code={home} className="shrink-0 text-xl leading-none" />}
+          </div>
+          {center}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {away && <Flag code={away} className="shrink-0 text-xl leading-none" />}
+            <span className={`font-cond font-semibold text-sm flex-1 min-w-0 truncate ${winner && winner === away ? "text-gold" : winner && away ? "text-mist line-through decoration-mist/50" : ""}`}>
+              {awayName ?? <span className="text-mist/40 italic font-normal">{k.as ? `2° Gr.${k.as[1]}` : "—"}</span>}
+            </span>
+          </div>
+        </div>
+        <div className="text-right hidden sm:flex sm:flex-col sm:items-end w-[130px] shrink-0">
+          <p className="font-cond text-xs text-mist leading-tight truncate">{k.stadium}</p>
+          <p className="font-cond text-[10px] uppercase tracking-wider text-mist/60 truncate">{k.city}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileBracketByDate({ ids, ctx, onPick, disabled, koPickScores, koScores }) {
+  const today = todayISO();
+  const focusRef = useRef(null);
+
+  const byDate = useMemo(() => {
+    const sorted = ids
+      .map(id => ({ id, ...KO_BY_ID[id] }))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    const map = new Map();
+    for (const m of sorted) {
+      if (!map.has(m.date)) map.set(m.date, []);
+      map.get(m.date).push(m.id);
+    }
+    return [...map.entries()];
+  }, [ids]);
+
+  const [collapsed, setCollapsed] = useState(
+    () => new Set(byDate.map(([d]) => d).filter(d => d < today))
+  );
+
+  const focusDate = useMemo(() => {
+    const dates = byDate.map(([d]) => d);
+    if (dates.includes(today)) return today;
+    return dates.find(d => d > today) ?? dates[dates.length - 1];
+  }, [byDate, today]);
+
+  useEffect(() => {
+    setCollapsed(new Set(byDate.map(([d]) => d).filter(d => d < today)));
+  }, [byDate, today]);
+
+  useEffect(() => {
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const toggle = (date) => setCollapsed(prev => {
+    const next = new Set(prev);
+    next.has(date) ? next.delete(date) : next.add(date);
+    return next;
+  });
+
+  return (
+    <div className="space-y-5">
+      {byDate.map(([date, matchIds]) => {
+        const isToday = date === today;
+        const isFocus = date === focusDate;
+        const isPast = date < today;
+        const isCollapsed = collapsed.has(date);
+        return (
+          <section key={date} ref={isFocus ? focusRef : null} className="scroll-mt-20">
+            <header
+              className={`sticky top-[3.4rem] z-10 mb-3 flex items-center gap-2 bg-night/95 backdrop-blur-sm py-1.5 ${isPast ? "cursor-pointer select-none" : ""}`}
+              onClick={isPast ? () => toggle(date) : undefined}
+            >
+              <h3 className={`font-display text-sm uppercase tracking-wide ${isToday ? "text-grass" : "text-chalk"}`}>
+                {formatDate(date)}
+              </h3>
+              {isToday && (
+                <span className="rounded-full bg-grass text-night px-2 py-px font-cond text-[10px] font-bold uppercase tracking-widest">Hoy</span>
+              )}
+              <span className="font-cond text-xs text-mist">{matchIds.length}p</span>
+              <div className="chalk-rule flex-1" />
+              {isPast && (
+                <ChevronDown
+                  className="w-4 h-4 text-mist/60 shrink-0 transition-transform duration-300"
+                  style={{ transform: isCollapsed ? "rotate(90deg)" : "rotate(0deg)" }}
+                />
+              )}
+            </header>
+            <div style={{ display: "grid", gridTemplateRows: isCollapsed ? "0fr" : "1fr", transition: "grid-template-rows 300ms ease" }}>
+              <div style={{ overflow: "hidden" }}>
+                <div className="rounded-xl border border-line overflow-hidden">
+                  {matchIds.map((id, idx) => (
+                    <KoListRow key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} isLast={idx === matchIds.length - 1} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
   const [activePhase, setActivePhase] = useState("r32");
+  const [mobileView, setMobileView] = useState(() => window.innerWidth >= 768 ? "llave" : "lista");
   const groupsLocked = Object.keys(GROUPS).filter((g) => ctx.complete[g]).length < 12;
   return (
     <div>
+      {/* Toggle vista: Lista / Llave */}
+      <div className="flex justify-center mb-4">
+        <div className="flex gap-1 rounded-full border border-line bg-turf/40 p-1">
+          {[{ id: "lista", label: "Lista" }, { id: "llave", label: "Llave" }].map(v => (
+            <button
+              key={v.id}
+              onClick={() => setMobileView(v.id)}
+              className={`cursor-pointer rounded-full px-5 py-1.5 font-cond font-bold text-sm uppercase tracking-wider transition-colors duration-150 focus:outline-none ${
+                mobileView === v.id ? "bg-gold text-night" : "text-mist hover:text-chalk"
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Phase tab nav */}
       <div className="overflow-x-auto mb-5 scrollbar-hide">
         <div className="flex gap-1 rounded-lg border border-line bg-turf/40 p-1 w-max mx-auto">
@@ -478,41 +775,46 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
         </div>
       </div>
 
-      {/* Mobile: left + right columns like desktop but without connectors */}
+      {/* Mobile */}
       {(() => {
         const phase = BRACKET_PHASES.find(p => p.id === activePhase);
         const leftIds  = phase?.leftIds  ?? [];
         const rightIds = phase?.rightIds ?? [];
         const isFinal  = activePhase === "f";
+        const allIds   = [...leftIds, ...rightIds];
         return (
-          <div key={`mob-${activePhase}`} className="md:hidden phase-enter">
-            <div className="flex gap-2">
-              {/* Left column */}
-              <div className="flex-1 flex flex-col gap-3">
-                {isFinal
-                  ? <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
-                  : leftIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)
-                }
+          <div key={`mob-${activePhase}-${mobileView}`} className={`${mobileView === "lista" ? "block" : "md:hidden"} phase-enter`}>
+            {isFinal ? (
+              <div className="flex flex-col gap-3">
+                <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
+                <KoCard matchId={103} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
+                <div className="flex justify-center pt-2"><Podium ctx={ctx} /></div>
               </div>
-              {/* Right column */}
-              <div className="flex-1 flex flex-col gap-3">
-                {isFinal
-                  ? <KoCard matchId={103} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
-                  : rightIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)
-                }
-              </div>
-            </div>
-            {isFinal && (
-              <div className="flex justify-center pt-4">
-                <Podium ctx={ctx} />
+            ) : mobileView === "lista" ? (
+              <MobileBracketByDate
+                ids={allIds}
+                ctx={ctx}
+                onPick={onPick}
+                disabled={groupsLocked}
+                koPickScores={koPickScores}
+                koScores={koScores}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <div className="flex-1 flex flex-col gap-3">
+                  {leftIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
+                </div>
+                <div className="flex-1 flex flex-col gap-3">
+                  {rightIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
+                </div>
               </div>
             )}
           </div>
         );
       })()}
 
-      {/* Desktop: horizontal bracket */}
-      <div key={activePhase} className="hidden md:block overflow-x-auto pb-4 phase-enter">
+      {/* Desktop: horizontal bracket (solo en vista Llave) */}
+      <div key={activePhase} className={`${mobileView === "llave" ? "block" : "hidden"} overflow-x-auto pb-4 phase-enter`}>
         <div
           className="flex items-stretch w-fit mx-auto"
           style={{ background: "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(63,220,129,0.07) 0%, transparent 70%)" }}
