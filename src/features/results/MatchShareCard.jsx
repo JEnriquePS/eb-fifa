@@ -419,16 +419,16 @@ function KoShareCard({ cardRef, matchId, home, away, players, allPollas, koScore
               </div>
 
               {/* Phase scores */}
-              <div style={{ flex: 1, fontSize: 10, color: "#6a7e6a", textAlign: "center" }}>
-                {hasPred ? (
-                  <>
-                    <span style={{ color: "#9ec69e" }}>{pred.rtHome}–{pred.rtAway}</span>
-                    {pred.etHome != null && <><span style={{ margin: "0 3px", color: "#3a4e3a" }}>·</span><span style={{ color: "#ffa726" }}>{pred.etHome}–{pred.etAway}</span></>}
-                    {pred.penHome != null && <><span style={{ margin: "0 3px", color: "#3a4e3a" }}>·</span><span style={{ color: "#f0c040" }}>{pred.penHome}–{pred.penAway}</span></>}
-                  </>
-                ) : (
-                  <span style={{ color: "#3a4e3a", fontStyle: "italic" }}>—</span>
-                )}
+              <div style={{ flex: 1, display: "flex" }}>
+                <div style={{ flex: 1, textAlign: "center", fontSize: 10, color: "#9ec69e" }}>
+                  {hasPred ? `${pred.rtHome}–${pred.rtAway}` : <span style={{ color: "#3a4e3a" }}>—</span>}
+                </div>
+                <div style={{ flex: 1, textAlign: "center", fontSize: 10, color: "#ffa726" }}>
+                  {pred.etHome != null ? `${pred.etHome}–${pred.etAway}` : ""}
+                </div>
+                <div style={{ flex: 1, textAlign: "center", fontSize: 10, color: "#f0c040" }}>
+                  {pred.penHome != null ? `${pred.penHome}–${pred.penAway}` : ""}
+                </div>
               </div>
 
               {/* Points */}
