@@ -584,14 +584,14 @@ function KoListRow({ matchId, ctx, resultsCtx, onPick, disabled = false, koPickS
     <div className="flex flex-col items-center gap-1">
       <div className="flex items-center gap-1">
         <ScoreBox val={rtH} onChange={setRtH} locked={false} />
-        <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 h-7 flex items-center">RT</span>
+        <span className="w-8 h-7 shrink-0 flex items-center justify-center rounded border border-mist/15 bg-turf font-display text-sm font-bold text-mist/40 tabular-nums">RT</span>
         <ScoreBox val={rtA} onChange={setRtA} locked={false} />
       </div>
       {(phase === "et" || phase === "pen") && (
         <div className="flex flex-col items-center gap-0.5">
           <div className="flex items-center gap-1">
             <ScoreBox val={etH} onChange={setEtH} locked={false} amber invalid={etHInvalid} />
-            <span className="font-cond text-[8px] text-amber border border-amber/30 rounded px-0.5 h-7 flex items-center">AET</span>
+            <span className="w-8 h-7 shrink-0 flex items-center justify-center rounded border border-amber/30 bg-turf font-display text-sm font-bold text-amber tabular-nums">AET</span>
             <ScoreBox val={etA} onChange={setEtA} locked={false} amber invalid={etAInvalid} />
           </div>
           {(etHInvalid || etAInvalid) && (
@@ -602,7 +602,7 @@ function KoListRow({ matchId, ctx, resultsCtx, onPick, disabled = false, koPickS
       {phase === "pen" && (
         <div className="flex items-center gap-1">
           <ScoreBox val={penH} onChange={setPenH} locked={false} amber={false} />
-          <span className="font-cond text-[8px] text-gold border border-gold/30 rounded px-0.5 h-7 flex items-center">PEN</span>
+          <span className="w-8 h-7 shrink-0 flex items-center justify-center rounded border border-gold/30 bg-turf font-display text-sm font-bold text-gold tabular-nums">PEN</span>
           <ScoreBox val={penA} onChange={setPenA} locked={false} amber={false} />
         </div>
       )}
@@ -610,7 +610,7 @@ function KoListRow({ matchId, ctx, resultsCtx, onPick, disabled = false, koPickS
   ) : showSaved ? (
     <div className="flex items-center gap-1">
       <ScoreBox val={String(saved.rtHome)} onChange={() => {}} locked />
-      <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 h-7 flex items-center">RT</span>
+      <span className="w-8 h-7 shrink-0 flex items-center justify-center rounded border border-mist/15 bg-turf font-display text-sm font-bold text-mist/40 tabular-nums">RT</span>
       <ScoreBox val={String(saved.rtAway)} onChange={() => {}} locked />
     </div>
   ) : (
