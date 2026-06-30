@@ -469,7 +469,13 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const timer = useRef(null);
   const restoringRef = useRef(false);
 
-  // Sincronizar inputs con scores guardados cuando llegan del servidor
+  // 1. Limpiar cuando cambian los equipos
+  const teamsKey = `${home ?? ""}-${away ?? ""}`;
+  useEffect(() => {
+    setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA(""); setPhase("rt");
+  }, [teamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2. Restaurar scores guardados (corre después de limpiar, para no quedar vacío)
   useEffect(() => {
     if (saved?.rtHome == null) return;
     restoringRef.current = true;
@@ -481,11 +487,6 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
     setPenA(saved.penAway != null ? String(saved.penAway) : "");
     setPhase(saved.penHome != null ? "pen" : saved.etHome != null ? "et" : "rt");
   }, [matchId, saved?.rtHome, saved?.rtAway, saved?.etHome, saved?.penHome]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const teamsKey = `${home ?? ""}-${away ?? ""}`;
-  useEffect(() => {
-    setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA(""); setPhase("rt");
-  }, [teamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rtHn = parseInt(rtH, 10), rtAn = parseInt(rtA, 10);
   const rtValid = rtH !== "" && rtA !== "" && !isNaN(rtHn) && !isNaN(rtAn);
