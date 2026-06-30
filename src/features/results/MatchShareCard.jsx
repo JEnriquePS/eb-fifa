@@ -374,12 +374,10 @@ function KoShareCard({ cardRef, matchId, home, away, players, allPollas, koScore
         }}>
           <div style={{ flex: "0 0 80px" }} />
           <div style={{ flex: "0 0 56px", fontSize: 9, color: "#8fa88f", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>Ganador</div>
-          <div style={{ flex: 1, fontSize: 9, textAlign: "center", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
-            <span style={{ color: "#7ab87a" }}>RT</span>
-            <span style={{ margin: "0 4px", color: "#4a5e4a" }}>·</span>
-            <span style={{ color: "#cc8844" }}>AET</span>
-            <span style={{ margin: "0 4px", color: "#4a5e4a" }}>·</span>
-            <span style={{ color: "#c0a030" }}>PEN</span>
+          <div style={{ flex: 1, display: "flex" }}>
+            <div style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#7ab87a", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>RT</div>
+            <div style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#cc8844", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>AET</div>
+            <div style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#c0a030", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>PEN</div>
           </div>
           <div style={{ flex: "0 0 24px", fontSize: 9, color: "#8fa88f", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1, textAlign: "right" }}>Pts</div>
         </div>
