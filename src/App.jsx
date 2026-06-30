@@ -201,7 +201,7 @@ function AppShell({ user, signOut }) {
         {tab === "bracket" && (
           <>
             <ScoringModal />
-            <BracketView ctx={bracketCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} koScores={data.results.koScores ?? {}} />
+            <BracketView ctx={bracketCtx} resultsCtx={resultsCtx} onPick={data.onPick} koPickScores={data.myKoPickScores} koScores={data.results.koScores ?? {}} />
           </>
         )}
         {tab === "results" && (

@@ -20,7 +20,7 @@ function PhaseDivider({ label, draw }) {
   );
 }
 
-function ScoreBox({ val, onChange, locked, amber }) {
+function ScoreBox({ val, onChange, locked, amber, invalid }) {
   if (locked) {
     return (
       <div className={`w-8 h-7 shrink-0 flex items-center justify-center rounded border ${
@@ -40,7 +40,11 @@ function ScoreBox({ val, onChange, locked, amber }) {
       maxLength={2}
       value={val}
       onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
-      className="w-8 h-7 shrink-0 text-center rounded border border-line bg-turf text-chalk font-display text-sm font-bold tabular-nums focus:outline-none focus:border-grass/60 focus:ring-1 focus:ring-grass/30"
+      className={`w-8 h-7 shrink-0 text-center rounded border bg-turf font-display text-sm font-bold tabular-nums focus:outline-none ${
+        invalid
+          ? "border-red-500/70 text-red-400 focus:border-red-400 focus:ring-1 focus:ring-red-400/30"
+          : "border-line text-chalk focus:border-grass/60 focus:ring-1 focus:ring-grass/30"
+      }`}
     />
   );
 }
@@ -68,9 +72,9 @@ function TeamRow({ code, placeholder, isWinner, isLoser, scoreBox }) {
 
 // ── KoCard (interactivo) ──────────────────────────────────────────────────────
 
-function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickScores = {}, koScores = {} }) {
+function KoCard({ matchId, ctx, resultsCtx, onPick, fluid = false, disabled = false, koPickScores = {}, koScores = {} }) {
   const k = KO_BY_ID[matchId];
-  const { home, away } = resolveKoMatch(matchId, ctx, true);
+  const { home, away } = resolveKoMatch(matchId, resultsCtx ?? ctx, true);
   const winner = koWinner(matchId, ctx, true);
   const bothKnown = !!home && !!away;
   // Partido bloqueado si ya tiene resultado en BD o si su horario ya pasó (tiempos en UTC-5)
@@ -87,16 +91,36 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
   const [penA, setPenA] = useState("");
   const [phase, setPhase] = useState("rt");
   const [flash, setFlash] = useState(false);
-  const [editing, setEditing] = useState(false);
   const timer = useRef(null);
   const prevWinnerRef = useRef(winner);
   const restoringRef = useRef(false);
+  const pendingPickRef = useRef(null);
 
   const teamsKey = `${home ?? ""}-${away ?? ""}`;
   useEffect(() => {
     setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA("");
-    setPhase("rt"); setEditing(false);
+    setPhase("rt");
   }, [teamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (saved?.rtHome == null) return;
+    restoringRef.current = true;
+    setTimeout(() => { restoringRef.current = false; }, 700);
+    setRtH(String(saved.rtHome)); setRtA(String(saved.rtAway ?? ""));
+    setEtH(saved.etHome != null ? String(saved.etHome) : "");
+    setEtA(saved.etAway != null ? String(saved.etAway) : "");
+    setPenH(saved.penHome != null ? String(saved.penHome) : "");
+    setPenA(saved.penAway != null ? String(saved.penAway) : "");
+    setPhase(saved.penHome != null ? "pen" : saved.etHome != null ? "et" : "rt");
+  }, [matchId, saved?.rtHome, saved?.rtAway, saved?.etHome, saved?.penHome]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Flush pending pick on unmount so switching views doesn't lose a debounced save
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (pendingPickRef.current && !restoringRef.current) onPick(...pendingPickRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (winner && !prevWinnerRef.current) {
@@ -110,81 +134,81 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
   const rtHn = parseInt(rtH, 10), rtAn = parseInt(rtA, 10);
   const rtValid = rtH !== "" && rtA !== "" && !isNaN(rtHn) && !isNaN(rtAn);
   useEffect(() => {
-    if (!rtValid || !bothKnown || (!!winner && !editing)) return;
+    if (!rtValid || !bothKnown) return;
     if (timer.current) clearTimeout(timer.current);
     if (rtHn !== rtAn) {
       const code = rtHn > rtAn ? home : away;
+      if (phase !== "rt") { setPhase("rt"); setEtH(""); setEtA(""); setPenH(""); setPenA(""); }
+      const args = [matchId, code, rtHn, rtAn, null, null];
+      pendingPickRef.current = args;
       timer.current = setTimeout(() => {
-        if (!restoringRef.current) { onPick(matchId, code, rtHn, rtAn, null, null); setEditing(false); }
+        if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); }
       }, 600);
     } else if (phase === "rt") { setPhase("et"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [rtH, rtA, editing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rtH, rtA]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const etHn = parseInt(etH, 10), etAn = parseInt(etA, 10);
   const etValid = etH !== "" && etA !== "" && !isNaN(etHn) && !isNaN(etAn);
   useEffect(() => {
-    if (phase !== "et" || !etValid || !bothKnown || (!!winner && !editing)) return;
+    if ((phase !== "et" && phase !== "pen") || !etValid || !bothKnown) return;
+    const rh = parseInt(rtH, 10), ra = parseInt(rtA, 10);
+    if (etHn < rh || etAn < ra) return; // AET no puede ser menor que RT
     if (timer.current) clearTimeout(timer.current);
     if (etHn !== etAn) {
       const code = etHn > etAn ? home : away;
-      const rh = parseInt(rtH, 10), ra = parseInt(rtA, 10);
+      if (phase === "pen") { setPenH(""); setPenA(""); }
+      const args = [matchId, code, rh, ra, etHn, etAn];
+      pendingPickRef.current = args;
       timer.current = setTimeout(() => {
-        if (!restoringRef.current) { onPick(matchId, code, rh, ra, etHn, etAn); setEditing(false); }
+        if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); }
       }, 600);
     } else { setPhase("pen"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [etH, etA, phase, editing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [etH, etA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const penHn = parseInt(penH, 10), penAn = parseInt(penA, 10);
   const penValid = penH !== "" && penA !== "" && !isNaN(penHn) && !isNaN(penAn);
   useEffect(() => {
-    if (phase !== "pen" || !penValid || !bothKnown || (!!winner && !editing) || penHn === penAn) return;
+    if (phase !== "pen" || !penValid || !bothKnown || penHn === penAn) return;
     const code = penHn > penAn ? home : away;
     const rh = parseInt(rtH, 10), ra = parseInt(rtA, 10);
     const eh = parseInt(etH, 10), ea = parseInt(etA, 10);
+    const args = [matchId, code, rh, ra, eh, ea, penHn, penAn];
+    pendingPickRef.current = args;
     timer.current = setTimeout(() => {
-      if (!restoringRef.current) { onPick(matchId, code, rh, ra, eh, ea, penHn, penAn); setEditing(false); }
+      if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); }
     }, 600);
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [penH, penA, phase, editing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [penH, penA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const startEdit = () => {
-    if (timer.current) clearTimeout(timer.current);
-    restoringRef.current = true;
-    setTimeout(() => { restoringRef.current = false; }, 700);
-    setRtH(saved?.rtHome != null ? String(saved.rtHome) : "");
-    setRtA(saved?.rtAway != null ? String(saved.rtAway) : "");
-    setEtH(saved?.etHome != null ? String(saved.etHome) : "");
-    setEtA(saved?.etAway != null ? String(saved.etAway) : "");
-    setPenH(saved?.penHome != null ? String(saved.penHome) : "");
-    setPenA(saved?.penAway != null ? String(saved.penAway) : "");
-    setPhase(saved?.penHome != null ? "pen" : saved?.etHome != null ? "et" : "rt");
-    setEditing(true);
-  };
-
+  const etHInvalid = etH !== "" && rtH !== "" && !isNaN(etHn) && !isNaN(rtHn) && etHn < rtHn;
+  const etAInvalid = etA !== "" && rtA !== "" && !isNaN(etAn) && !isNaN(rtAn) && etAn < rtAn;
   const isRtLocked = phase === "et" || phase === "pen";
   const isEtLocked = phase === "pen";
-  const showScoreInputs = (bothKnown && !winner && !isPlayed && !disabled) || (editing && bothKnown && !isPlayed);
-  const showSavedScores = saved?.rtHome != null && !showScoreInputs && !isPlayed;
-  const showCambiar = saved?.rtHome != null && !isPlayed && !editing;
+  const showScoreInputs = bothKnown && !isPlayed && !disabled;
 
   return (
     <div
-      className={`${fluid ? "w-full" : "w-44 shrink-0"} overflow-hidden rounded-lg backdrop-blur-sm transition-all duration-300 hover:shadow-lg`}
+      className={`${fluid ? "w-full" : "w-44 shrink-0"} overflow-hidden rounded-lg backdrop-blur-sm transition-all duration-300 ${isPlayed ? "" : "hover:shadow-lg"}`}
       style={{
-        backgroundImage: [
-          "linear-gradient(rgba(12,32,20,0.82), rgba(12,32,20,0.82))",
-          "linear-gradient(135deg, rgba(63,220,129,0.2) 0%, rgba(255,255,255,0.03) 50%, rgba(238,200,94,0.15) 100%)",
-        ].join(", "),
-        backgroundOrigin: "padding-box, border-box",
-        backgroundClip: "padding-box, border-box",
-        border: "1px solid transparent",
-        boxShadow: flash
+        opacity: isPlayed ? 0.5 : 1,
+        backgroundImage: isPlayed
+          ? "linear-gradient(rgba(10,20,14,0.92), rgba(10,20,14,0.92))"
+          : [
+              "linear-gradient(rgba(12,32,20,0.82), rgba(12,32,20,0.82))",
+              "linear-gradient(135deg, rgba(63,220,129,0.2) 0%, rgba(255,255,255,0.03) 50%, rgba(238,200,94,0.15) 100%)",
+            ].join(", "),
+        backgroundOrigin: isPlayed ? undefined : "padding-box, border-box",
+        backgroundClip: isPlayed ? undefined : "padding-box, border-box",
+        border: isPlayed ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
+        boxShadow: isPlayed
+          ? (winner ? "inset 3px 0 0 rgba(238,200,94,0.3)" : "none")
+          : flash
           ? "inset 3px 0 0 #3fdc81, 0 0 0 2px rgba(63,220,129,0.35), 0 8px 24px rgba(63,220,129,0.15)"
           : winner
           ? "inset 3px 0 0 rgba(238,200,94,0.75), 0 4px 16px rgba(0,0,0,0.4)"
-          : isToday && !isPlayed
+          : isToday
           ? "inset 3px 0 0 rgba(240,192,64,0.9), 0 0 0 1px rgba(240,192,64,0.3), 0 4px 16px rgba(240,192,64,0.12)"
           : "0 2px 10px rgba(0,0,0,0.3)",
       }}
@@ -203,22 +227,14 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
         code={home} placeholder={slotLabel(k.hs)}
         isWinner={!!winner && winner === home}
         isLoser={!!winner && winner !== home && !!home}
-        scoreBox={
-          showScoreInputs ? <ScoreBox val={rtH} onChange={setRtH} locked={isRtLocked} amber={isRtLocked} /> :
-          showSavedScores ? <ScoreBox val={String(saved.rtHome)} onChange={() => {}} locked amber={false} /> :
-          null
-        }
+        scoreBox={showScoreInputs ? <ScoreBox val={rtH} onChange={setRtH} locked={false} /> : null}
       />
-      <PhaseDivider label="90'" draw={isRtLocked || (showSavedScores && saved.etHome != null)} />
+      <PhaseDivider label="90'" draw={isRtLocked} />
       <TeamRow
         code={away} placeholder={slotLabel(k.as)}
         isWinner={!!winner && winner === away}
         isLoser={!!winner && winner !== away && !!away}
-        scoreBox={
-          showScoreInputs ? <ScoreBox val={rtA} onChange={setRtA} locked={isRtLocked} amber={isRtLocked} /> :
-          showSavedScores ? <ScoreBox val={String(saved.rtAway)} onChange={() => {}} locked amber={false} /> :
-          null
-        }
+        scoreBox={showScoreInputs ? <ScoreBox val={rtA} onChange={setRtA} locked={false} /> : null}
       />
 
       {/* Inputs activos — ET */}
@@ -226,10 +242,15 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
         <>
           <PhaseDivider label="AET — marcador total" draw={isEtLocked} />
           <TeamRow code={home} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={etH} onChange={setEtH} locked={isEtLocked} amber={isEtLocked} />} />
+            scoreBox={<ScoreBox val={etH} onChange={setEtH} locked={false} invalid={etHInvalid} />} />
           <div className="h-px bg-line/40" />
           <TeamRow code={away} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={etA} onChange={setEtA} locked={isEtLocked} amber={isEtLocked} />} />
+            scoreBox={<ScoreBox val={etA} onChange={setEtA} locked={false} invalid={etAInvalid} />} />
+          {(etHInvalid || etAInvalid) && (
+            <p className="font-cond text-[9px] text-red-400 text-center px-2 py-1 leading-tight">
+              AET no puede ser menor que los 90'
+            </p>
+          )}
         </>
       )}
       {showScoreInputs && phase === "pen" && (
@@ -243,28 +264,6 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
         </>
       )}
 
-      {/* Marcadores guardados en modo solo lectura — ET */}
-      {showSavedScores && saved.etHome != null && (
-        <>
-          <PhaseDivider label="AET — marcador total" draw={saved.penHome != null} />
-          <TeamRow code={home} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={String(saved.etHome)} onChange={() => {}} locked amber />} />
-          <div className="h-px bg-line/40" />
-          <TeamRow code={away} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={String(saved.etAway)} onChange={() => {}} locked amber />} />
-        </>
-      )}
-      {showSavedScores && saved.penHome != null && (
-        <>
-          <PhaseDivider label="PEN — tanda (ej. 5-4)" draw={false} />
-          <TeamRow code={home} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={String(saved.penHome)} onChange={() => {}} locked amber={false} />} />
-          <div className="h-px bg-line/40" />
-          <TeamRow code={away} isWinner={false} isLoser={false}
-            scoreBox={<ScoreBox val={String(saved.penAway)} onChange={() => {}} locked amber={false} />} />
-        </>
-      )}
-
       {/* Sin pronóstico — partido ya jugado */}
       {isPlayed && !winner && bothKnown && (
         <div className="px-2.5 py-1 border-t border-line/30">
@@ -272,12 +271,6 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
         </div>
       )}
 
-      {showCambiar && (
-        <button onClick={startEdit}
-          className="w-full py-1 font-cond text-[10px] text-mist/40 hover:text-mist cursor-pointer transition-colors text-center border-t border-line/40">
-          cambiar ×
-        </button>
-      )}
       <footer className="px-2.5 py-1 border-t border-line/60">
         <span className="font-cond text-[10px] uppercase tracking-wider text-mist/70 truncate block">
           {k.stadium} · {k.city}
@@ -345,10 +338,11 @@ const BRACKET_PHASES = [
 ];
 
 // Slot mini para fases inactivas: solo bandera + nombre o placeholder
-function KoCardSlot({ matchId, ctx }) {
+function KoCardSlot({ matchId, ctx, resultsCtx }) {
   const k = KO_BY_ID[matchId];
-  const { home, away } = resolveKoMatch(matchId, ctx, true);
-  const winner = koWinner(matchId, ctx, true);
+  const rc = resultsCtx ?? ctx;
+  const { home, away } = resolveKoMatch(matchId, rc, true);
+  const winner = koWinner(matchId, rc, true);
 
   const Row = ({ code, label }) => (
     <div className={`flex items-center gap-1 px-1.5 py-1.5 ${winner === code ? "bg-gold/10" : ""}`}>
@@ -436,22 +430,22 @@ function BracketConnector({ pairCount, reversed = false }) {
   );
 }
 
-function BracketColumn({ ids, ctx, onPick, active = false, disabled = false, koPickScores = {}, koScores = {} }) {
+function BracketColumn({ ids, ctx, resultsCtx, onPick, active = false, disabled = false, koPickScores = {}, koScores = {} }) {
   return (
     <div className="flex flex-col">
       <div className="flex flex-1 flex-col justify-around gap-3">
         {ids.map((id) => active
-          ? <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} />
-          : <KoCardSlot key={id} matchId={id} ctx={ctx} />
+          ? <KoCard key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} />
+          : <KoCardSlot key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} />
         )}
       </div>
     </div>
   );
 }
 
-function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, koScores = {}, isLast }) {
+function KoListRow({ matchId, ctx, resultsCtx, onPick, disabled = false, koPickScores = {}, koScores = {}, isLast }) {
   const k = KO_BY_ID[matchId];
-  const { home, away } = resolveKoMatch(matchId, ctx, true);
+  const { home, away } = resolveKoMatch(matchId, resultsCtx ?? ctx, true);
   const winner = koWinner(matchId, ctx, true);
   const bothKnown = !!home && !!away;
   const matchStarted = new Date(`${k.date}T${k.time}:00-05:00`) < new Date();
@@ -468,6 +462,7 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const [phase, setPhase] = useState("rt");
   const timer = useRef(null);
   const restoringRef = useRef(false);
+  const pendingPickRef = useRef(null);
 
   // 1. Limpiar cuando cambian los equipos
   const teamsKey = `${home ?? ""}-${away ?? ""}`;
@@ -488,6 +483,14 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
     setPhase(saved.penHome != null ? "pen" : saved.etHome != null ? "et" : "rt");
   }, [matchId, saved?.rtHome, saved?.rtAway, saved?.etHome, saved?.penHome]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Flush pending pick on unmount so switching views doesn't lose a debounced save
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (pendingPickRef.current && !restoringRef.current) onPick(...pendingPickRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const rtHn = parseInt(rtH, 10), rtAn = parseInt(rtA, 10);
   const rtValid = rtH !== "" && rtA !== "" && !isNaN(rtHn) && !isNaN(rtAn);
   useEffect(() => {
@@ -495,7 +498,10 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
     if (timer.current) clearTimeout(timer.current);
     if (rtHn !== rtAn) {
       const code = rtHn > rtAn ? home : away;
-      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, rtHn, rtAn, null, null); }, 600);
+      if (phase !== "rt") { setPhase("rt"); setEtH(""); setEtA(""); setPenH(""); setPenA(""); }
+      const args = [matchId, code, rtHn, rtAn, null, null];
+      pendingPickRef.current = args;
+      timer.current = setTimeout(() => { if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); } }, 600);
     } else if (phase === "rt") { setPhase("et"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [rtH, rtA]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -503,11 +509,16 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const etHn = parseInt(etH, 10), etAn = parseInt(etA, 10);
   const etValid = etH !== "" && etA !== "" && !isNaN(etHn) && !isNaN(etAn);
   useEffect(() => {
-    if (phase !== "et" || !etValid || !bothKnown) return;
+    if ((phase !== "et" && phase !== "pen") || !etValid || !bothKnown) return;
+    const rh = parseInt(rtH, 10), ra = parseInt(rtA, 10);
+    if (etHn < rh || etAn < ra) return; // AET no puede ser menor que RT
     if (timer.current) clearTimeout(timer.current);
     if (etHn !== etAn) {
       const code = etHn > etAn ? home : away;
-      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), etHn, etAn); }, 600);
+      if (phase === "pen") { setPenH(""); setPenA(""); }
+      const args = [matchId, code, rh, ra, etHn, etAn];
+      pendingPickRef.current = args;
+      timer.current = setTimeout(() => { if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); } }, 600);
     } else { setPhase("pen"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [etH, etA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -517,10 +528,14 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   useEffect(() => {
     if (phase !== "pen" || !penValid || !bothKnown || penHn === penAn) return;
     const code = penHn > penAn ? home : away;
-    timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), parseInt(etH,10), parseInt(etA,10), penHn, penAn); }, 600);
+    const args = [matchId, code, parseInt(rtH,10), parseInt(rtA,10), parseInt(etH,10), parseInt(etA,10), penHn, penAn];
+    pendingPickRef.current = args;
+    timer.current = setTimeout(() => { if (!restoringRef.current) { pendingPickRef.current = null; onPick(...args); } }, 600);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [penH, penA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const etHInvalid = etH !== "" && rtH !== "" && !isNaN(etHn) && !isNaN(rtHn) && etHn < rtHn;
+  const etAInvalid = etA !== "" && rtA !== "" && !isNaN(etAn) && !isNaN(rtAn) && etAn < rtAn;
   const isRtLocked = phase === "et" || phase === "pen";
   const isEtLocked = phase === "pen";
   // Inputs siempre visibles mientras el partido no ha jugado (como fase de grupos)
@@ -568,17 +583,22 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   ) : showInputs ? (
     <div className="flex flex-col items-center gap-1">
       <div className="flex items-center gap-1">
-        <ScoreBox val={rtH} onChange={setRtH} locked={isRtLocked} />
+        <ScoreBox val={rtH} onChange={setRtH} locked={false} />
         <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 py-px">
           {phase === "et" ? "AET" : phase === "pen" ? "PEN" : "RT"}
         </span>
-        <ScoreBox val={rtA} onChange={setRtA} locked={isRtLocked} />
+        <ScoreBox val={rtA} onChange={setRtA} locked={false} />
       </div>
       {(phase === "et" || phase === "pen") && (
-        <div className="flex items-center gap-1">
-          <ScoreBox val={etH} onChange={setEtH} locked={isEtLocked} amber />
-          <span className="font-cond text-[8px] text-amber border border-amber/30 rounded px-0.5 py-px">AET</span>
-          <ScoreBox val={etA} onChange={setEtA} locked={isEtLocked} amber />
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="flex items-center gap-1">
+            <ScoreBox val={etH} onChange={setEtH} locked={false} amber invalid={etHInvalid} />
+            <span className="font-cond text-[8px] text-amber border border-amber/30 rounded px-0.5 py-px">AET</span>
+            <ScoreBox val={etA} onChange={setEtA} locked={false} amber invalid={etAInvalid} />
+          </div>
+          {(etHInvalid || etAInvalid) && (
+            <p className="font-cond text-[9px] text-red-400 leading-tight">AET no puede ser menor que los 90'</p>
+          )}
         </div>
       )}
       {phase === "pen" && (
@@ -630,7 +650,7 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   );
 }
 
-function MobileBracketByDate({ ids, ctx, onPick, disabled, koPickScores, koScores }) {
+function MobileBracketByDate({ ids, ctx, resultsCtx, onPick, disabled, koPickScores, koScores }) {
   const today = todayISO();
   const focusRef = useRef(null);
 
@@ -702,7 +722,7 @@ function MobileBracketByDate({ ids, ctx, onPick, disabled, koPickScores, koScore
               <div style={{ overflow: "hidden" }}>
                 <div className="rounded-xl border border-line overflow-hidden">
                   {matchIds.map((id, idx) => (
-                    <KoListRow key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} isLast={idx === matchIds.length - 1} />
+                    <KoListRow key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={disabled} koPickScores={koPickScores} koScores={koScores} isLast={idx === matchIds.length - 1} />
                   ))}
                 </div>
               </div>
@@ -714,7 +734,7 @@ function MobileBracketByDate({ ids, ctx, onPick, disabled, koPickScores, koScore
   );
 }
 
-function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
+function BracketVisual({ ctx, resultsCtx, onPick, koPickScores = {}, koScores = {} }) {
   const [activePhase, setActivePhase] = useState("r32");
   const [mobileView, setMobileView] = useState(() => window.innerWidth >= 768 ? "llave" : "lista");
   const groupsLocked = Object.keys(GROUPS).filter((g) => ctx.complete[g]).length < 12;
@@ -775,14 +795,15 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
           <div key={`mob-${activePhase}-${mobileView}`} className={`${mobileView === "lista" ? "block" : "md:hidden"} phase-enter`}>
             {isFinal ? (
               <div className="flex flex-col gap-3">
-                <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
-                <KoCard matchId={103} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
+                <KoCard matchId={104} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
+                <KoCard matchId={103} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />
                 <div className="flex justify-center pt-2"><Podium ctx={ctx} /></div>
               </div>
             ) : mobileView === "lista" ? (
               <MobileBracketByDate
                 ids={allIds}
                 ctx={ctx}
+                resultsCtx={resultsCtx}
                 onPick={onPick}
                 disabled={groupsLocked}
                 koPickScores={koPickScores}
@@ -791,10 +812,10 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
             ) : (
               <div className="flex gap-2">
                 <div className="flex-1 flex flex-col gap-3">
-                  {leftIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
+                  {leftIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
                 </div>
                 <div className="flex-1 flex flex-col gap-3">
-                  {rightIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
+                  {rightIds.map(id => <KoCard key={id} matchId={id} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} fluid koPickScores={koPickScores} koScores={koScores} />)}
                 </div>
               </div>
             )}
@@ -808,13 +829,13 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
           className="flex items-stretch w-fit mx-auto"
           style={{ background: "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(63,220,129,0.07) 0%, transparent 70%)" }}
         >
-          <BracketColumn ids={LEFT.R32}  ctx={ctx} onPick={onPick} active={activePhase === "r32"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={LEFT.R32}  ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "r32"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={4} />
-          <BracketColumn ids={LEFT.R16}  ctx={ctx} onPick={onPick} active={activePhase === "r16"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={LEFT.R16}  ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "r16"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={2} />
-          <BracketColumn ids={LEFT.QF}   ctx={ctx} onPick={onPick} active={activePhase === "qf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={LEFT.QF}   ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "qf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={1} />
-          <BracketColumn ids={LEFT.SF}   ctx={ctx} onPick={onPick} active={activePhase === "sf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={LEFT.SF}   ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "sf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={1} reversed />
 
           <div className="flex flex-col self-stretch relative min-h-[72rem]">
@@ -838,8 +859,8 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
                 activePhase === "f" ? "text-gold" : "text-gold/40"
               }`}>Final</h4>
               {activePhase === "f"
-                ? <KoCard matchId={104} ctx={ctx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
-                : <KoCardSlot matchId={104} ctx={ctx} />}
+                ? <KoCard matchId={104} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+                : <KoCardSlot matchId={104} ctx={ctx} resultsCtx={resultsCtx} />}
             </div>
 
             {/* 3er puesto — mitad inferior, centrada en su mitad → conector apunta al 75% */}
@@ -848,19 +869,19 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
                 3er puesto
               </h4>
               {activePhase === "f"
-                ? <KoCard matchId={103} ctx={ctx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
-                : <KoCardSlot matchId={103} ctx={ctx} />}
+                ? <KoCard matchId={103} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+                : <KoCardSlot matchId={103} ctx={ctx} resultsCtx={resultsCtx} />}
             </div>
           </div>
 
           <BracketConnector pairCount={1} />
-          <BracketColumn ids={RIGHT.SF}  ctx={ctx} onPick={onPick} active={activePhase === "sf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={RIGHT.SF}  ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "sf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={1} reversed />
-          <BracketColumn ids={RIGHT.QF}  ctx={ctx} onPick={onPick} active={activePhase === "qf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={RIGHT.QF}  ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "qf"}  disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={2} reversed />
-          <BracketColumn ids={RIGHT.R16} ctx={ctx} onPick={onPick} active={activePhase === "r16"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={RIGHT.R16} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "r16"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
           <BracketConnector pairCount={4} reversed />
-          <BracketColumn ids={RIGHT.R32} ctx={ctx} onPick={onPick} active={activePhase === "r32"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
+          <BracketColumn ids={RIGHT.R32} ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} active={activePhase === "r32"} disabled={groupsLocked} koPickScores={koPickScores} koScores={koScores} />
         </div>
       </div>
     </div>
@@ -870,13 +891,13 @@ function BracketVisual({ ctx, onPick, koPickScores = {}, koScores = {} }) {
 
 // ── Vista principal ───────────────────────────────────────────────────────────
 
-export default function BracketView({ ctx, onPick, koPickScores = {}, koScores = {} }) {
+export default function BracketView({ ctx, resultsCtx, onPick, koPickScores = {}, koScores = {} }) {
   const groupsComplete = Object.keys(GROUPS).filter((g) => ctx.complete[g]).length;
   const allGroupsDone = groupsComplete === 12;
 
   return (
     <div>
-      <BracketVisual ctx={ctx} onPick={onPick} koPickScores={koPickScores} koScores={koScores} />
+      <BracketVisual ctx={ctx} resultsCtx={resultsCtx} onPick={onPick} koPickScores={koPickScores} koScores={koScores} />
       {!allGroupsDone && (
         <div className="mt-4 rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 flex flex-col gap-1">
           <p className="font-cond text-sm text-chalk">

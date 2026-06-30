@@ -6,6 +6,8 @@ const DEBOUNCE_MS = 900;
 export function usePollaData(user) {
   const [dbData, setDbData] = useState(null);
   const [localGroupScores, setLocalGroupScores] = useState({});
+  const [localKoPicks, setLocalKoPicks] = useState({});
+  const [localKoPickScores, setLocalKoPickScores] = useState({});
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | synced | error
   const [connected, setConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -17,6 +19,8 @@ export function usePollaData(user) {
     if (!user) return;
     const data = await db.fetchAll();
     setDbData(data);
+    setLocalKoPicks({});
+    setLocalKoPickScores({});
     setLastUpdated(new Date());
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -98,10 +102,30 @@ export function usePollaData(user) {
 
   const onPick = useCallback(
     async (matchId, code, rtHome, rtAway, etHome, etAway, penHome, penAway) => {
+      // Optimistic update — visible en ambas vistas sin esperar real-time
+      if (code !== undefined) {
+        setLocalKoPicks(prev => ({ ...prev, [matchId]: code }));
+        if (rtHome != null) {
+          setLocalKoPickScores(prev => ({
+            ...prev,
+            [matchId]: {
+              rtHome, rtAway: rtAway ?? null,
+              etHome: etHome ?? null, etAway: etAway ?? null,
+              penHome: penHome ?? null, penAway: penAway ?? null,
+            },
+          }));
+        }
+      } else {
+        setLocalKoPicks(prev => { const n = { ...prev }; delete n[matchId]; return n; });
+        setLocalKoPickScores(prev => { const n = { ...prev }; delete n[matchId]; return n; });
+      }
       try {
         if (code === undefined) await db.deleteKoPick(user.id, matchId);
         else await db.upsertKoPick(user.id, matchId, code, rtHome ?? null, rtAway ?? null, etHome ?? null, etAway ?? null, penHome ?? null, penAway ?? null);
       } catch {
+        // Rollback en error
+        setLocalKoPicks(prev => { const n = { ...prev }; delete n[matchId]; return n; });
+        setLocalKoPickScores(prev => { const n = { ...prev }; delete n[matchId]; return n; });
         setSyncStatus("error");
       }
     },
@@ -144,8 +168,10 @@ export function usePollaData(user) {
 
   // Mis scores: DB + cambios locales sin guardar (local gana)
   const myGroupScores = { ...myDbGroupScores, ...localGroupScores };
-  const myKoPicks = dbData ? toPolla([], dbData.koPreds, user?.id).koPicks : {};
-  const myKoPickScores = dbData ? toPolla([], dbData.koPreds, user?.id).koPickScores : {};
+  const myDbKoPicks = dbData ? toPolla([], dbData.koPreds, user?.id).koPicks : {};
+  const myDbKoPickScores = dbData ? toPolla([], dbData.koPreds, user?.id).koPickScores : {};
+  const myKoPicks = { ...myDbKoPicks, ...localKoPicks };
+  const myKoPickScores = { ...myDbKoPickScores, ...localKoPickScores };
 
   const players = dbData?.profiles ?? [];
   const me = players.find((p) => p.id === user?.id) ?? null;
