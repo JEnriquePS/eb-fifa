@@ -466,71 +466,68 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const [penH, setPenH] = useState("");
   const [penA, setPenA] = useState("");
   const [phase, setPhase] = useState("rt");
-  const [editing, setEditing] = useState(false);
   const timer = useRef(null);
   const restoringRef = useRef(false);
 
+  // Pre-cargar scores guardados al montar
+  useEffect(() => {
+    if (saved?.rtHome == null) return;
+    restoringRef.current = true;
+    setTimeout(() => { restoringRef.current = false; }, 700);
+    setRtH(String(saved.rtHome)); setRtA(String(saved.rtAway ?? ""));
+    setEtH(saved.etHome != null ? String(saved.etHome) : "");
+    setEtA(saved.etAway != null ? String(saved.etAway) : "");
+    setPenH(saved.penHome != null ? String(saved.penHome) : "");
+    setPenA(saved.penAway != null ? String(saved.penAway) : "");
+    setPhase(saved.penHome != null ? "pen" : saved.etHome != null ? "et" : "rt");
+  }, [matchId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const teamsKey = `${home ?? ""}-${away ?? ""}`;
   useEffect(() => {
-    setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA(""); setPhase("rt"); setEditing(false);
+    setRtH(""); setRtA(""); setEtH(""); setEtA(""); setPenH(""); setPenA(""); setPhase("rt");
   }, [teamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rtHn = parseInt(rtH, 10), rtAn = parseInt(rtA, 10);
   const rtValid = rtH !== "" && rtA !== "" && !isNaN(rtHn) && !isNaN(rtAn);
   useEffect(() => {
-    if (!rtValid || !bothKnown || (!!winner && !editing)) return;
+    if (!rtValid || !bothKnown) return;
     if (timer.current) clearTimeout(timer.current);
     if (rtHn !== rtAn) {
       const code = rtHn > rtAn ? home : away;
-      timer.current = setTimeout(() => { if (!restoringRef.current) { onPick(matchId, code, rtHn, rtAn, null, null); setEditing(false); } }, 600);
+      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, rtHn, rtAn, null, null); }, 600);
     } else if (phase === "rt") { setPhase("et"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [rtH, rtA, editing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rtH, rtA]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const etHn = parseInt(etH, 10), etAn = parseInt(etA, 10);
   const etValid = etH !== "" && etA !== "" && !isNaN(etHn) && !isNaN(etAn);
   useEffect(() => {
-    if (phase !== "et" || !etValid || !bothKnown || (!!winner && !editing)) return;
+    if (phase !== "et" || !etValid || !bothKnown) return;
     if (timer.current) clearTimeout(timer.current);
     if (etHn !== etAn) {
       const code = etHn > etAn ? home : away;
-      timer.current = setTimeout(() => { if (!restoringRef.current) { onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), etHn, etAn); setEditing(false); } }, 600);
+      timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), etHn, etAn); }, 600);
     } else { setPhase("pen"); }
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [etH, etA, phase, editing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [etH, etA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const penHn = parseInt(penH, 10), penAn = parseInt(penA, 10);
   const penValid = penH !== "" && penA !== "" && !isNaN(penHn) && !isNaN(penAn);
   useEffect(() => {
-    if (phase !== "pen" || !penValid || !bothKnown || (!!winner && !editing) || penHn === penAn) return;
+    if (phase !== "pen" || !penValid || !bothKnown || penHn === penAn) return;
     const code = penHn > penAn ? home : away;
-    timer.current = setTimeout(() => { if (!restoringRef.current) { onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), parseInt(etH,10), parseInt(etA,10), penHn, penAn); setEditing(false); } }, 600);
+    timer.current = setTimeout(() => { if (!restoringRef.current) onPick(matchId, code, parseInt(rtH,10), parseInt(rtA,10), parseInt(etH,10), parseInt(etA,10), penHn, penAn); }, 600);
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [penH, penA, phase, editing]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const startEdit = () => {
-    if (timer.current) clearTimeout(timer.current);
-    restoringRef.current = true;
-    setTimeout(() => { restoringRef.current = false; }, 700);
-    setRtH(saved?.rtHome != null ? String(saved.rtHome) : "");
-    setRtA(saved?.rtAway != null ? String(saved.rtAway) : "");
-    setEtH(saved?.etHome != null ? String(saved.etHome) : "");
-    setEtA(saved?.etAway != null ? String(saved.etAway) : "");
-    setPenH(saved?.penHome != null ? String(saved.penHome) : "");
-    setPenA(saved?.penAway != null ? String(saved.penAway) : "");
-    setPhase(saved?.penHome != null ? "pen" : saved?.etHome != null ? "et" : "rt");
-    setEditing(true);
-  };
+  }, [penH, penA, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isRtLocked = phase === "et" || phase === "pen";
   const isEtLocked = phase === "pen";
-  const showInputs = (bothKnown && !winner && !isPlayed && !disabled) || (editing && bothKnown && !isPlayed);
+  // Inputs siempre visibles mientras el partido no ha jugado (como fase de grupos)
+  const showInputs = bothKnown && !isPlayed && !disabled;
   const showSaved = saved?.rtHome != null && !showInputs && !res;
-  const showCambiar = saved?.rtHome != null && !isPlayed && !editing;
 
-  // Center: resultado oficial o inputs/pronóstico guardado
+  // Center: resultado oficial / inputs editables / scores guardados (solo lectura si disabled/played)
   const center = res ? (
-    // Partido jugado — mostrar resultado oficial + predicción del jugador
     <div className="flex flex-col items-center gap-0.5">
       <div className="flex items-center gap-1">
         <div className="w-8 h-8 flex items-center justify-center rounded-lg border border-grass/50 bg-turf shadow-inner">
@@ -568,7 +565,6 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
       })()}
     </div>
   ) : showInputs ? (
-    // Partido no jugado — inputs activos
     <div className="flex flex-col items-center gap-1">
       <div className="flex items-center gap-1">
         <ScoreBox val={rtH} onChange={setRtH} locked={isRtLocked} />
@@ -593,16 +589,10 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
       )}
     </div>
   ) : showSaved ? (
-    // Ganador elegido, solo lectura
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-1">
-        <ScoreBox val={String(saved.rtHome)} onChange={() => {}} locked />
-        <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 py-px">RT</span>
-        <ScoreBox val={String(saved.rtAway)} onChange={() => {}} locked />
-      </div>
-      {showCambiar && (
-        <button onClick={startEdit} className="font-cond text-[9px] text-mist/40 hover:text-mist cursor-pointer transition-colors">cambiar ×</button>
-      )}
+    <div className="flex items-center gap-1">
+      <ScoreBox val={String(saved.rtHome)} onChange={() => {}} locked />
+      <span className="font-cond text-[8px] uppercase tracking-widest text-mist/40 border border-mist/15 rounded px-1 py-px">RT</span>
+      <ScoreBox val={String(saved.rtAway)} onChange={() => {}} locked />
     </div>
   ) : (
     <span className="font-cond text-[9px] uppercase tracking-widest text-mist/30 border border-mist/15 rounded px-1 py-0.5">VS</span>
