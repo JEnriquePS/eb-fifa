@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-const LS_KEY = "eb_scoring_seen";
+const LS_KEY = "eb_scoring_seen_v2";
 
 function Row({ label, pts, color = "text-chalk" }) {
   return (
