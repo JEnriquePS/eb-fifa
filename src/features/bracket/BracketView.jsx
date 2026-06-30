@@ -165,12 +165,9 @@ function KoCard({ matchId, ctx, onPick, fluid = false, disabled = false, koPickS
 
   const isRtLocked = phase === "et" || phase === "pen";
   const isEtLocked = phase === "pen";
-  // Inputs activos solo si: equipos conocidos, sin ganador, partido no jugado, no deshabilitado
   const showScoreInputs = bothKnown && !winner && !isPlayed && !disabled;
-  // Mostrar marcadores guardados en modo solo lectura cuando hay ganador elegido
-  const showSavedScores = !!winner && saved?.rtHome != null;
-  // Botón cambiar solo para partidos no jugados (los jugados ya están cerrados)
-  const showCambiar = !!winner && !isPlayed;
+  const showSavedScores = saved?.rtHome != null && !showScoreInputs && !isPlayed;
+  const showCambiar = saved?.rtHome != null && !isPlayed;
 
   return (
     <div
@@ -527,8 +524,8 @@ function KoListRow({ matchId, ctx, onPick, disabled = false, koPickScores = {}, 
   const isRtLocked = phase === "et" || phase === "pen";
   const isEtLocked = phase === "pen";
   const showInputs = bothKnown && !winner && !isPlayed && !disabled;
-  const showSaved = !!winner && saved?.rtHome != null;
-  const showCambiar = !!winner && !isPlayed;
+  const showSaved = saved?.rtHome != null && !showInputs && !res;
+  const showCambiar = saved?.rtHome != null && !isPlayed;
 
   // Center: resultado oficial o inputs/pronóstico guardado
   const center = res ? (
